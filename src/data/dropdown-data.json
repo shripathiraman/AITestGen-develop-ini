@@ -1,0 +1,66 @@
+{
+  "automationTools": [
+    {
+      "code": "playwright",
+      "description": "Playwright"
+    },
+    {
+      "code": "selenium",
+      "description": "Selenium"
+    }
+  ],
+  "programmingLanguages": {
+    "playwright": [
+      {
+        "code": "typescript",
+        "description": "TypeScript"
+      },
+      {
+        "code": "javascript",
+        "description": "JavaScript"
+      }
+    ],
+    "selenium": [
+      {
+        "code": "java",
+        "description": "Java"
+      },
+      {
+        "code": "python",
+        "description": "Python"
+      }
+    ]
+  },
+  "llmProviders": [
+    {
+      "code": "openai",
+      "description": "OpenAI"
+    },
+    {
+      "code": "groq",
+      "description": "Groq"
+    }
+  ],
+  "llmModels": {
+    "openai": [
+      {
+        "code": "gpt-4",
+        "description": "GPT-4"
+      },
+      {
+        "code": "gpt-3.5",
+        "description": "GPT-3.5"
+      }
+    ],
+    "groq": [
+      {
+        "code": "openai/gpt-oss-120b",
+        "description": "GPT-OSS-120B"
+      },
+      {
+        "code": "llama-3.3-70b-versatile",
+        "description": "Llama-3.3-70B-Versatile"
+      }
+    ]
+  }
+}

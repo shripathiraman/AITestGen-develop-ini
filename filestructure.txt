@@ -1,0 +1,59 @@
+AITestGen-develop-ini/
+├── .vscode/
+│   └── settings.json
+├── icons/
+│   ├── icon128.png
+│   ├── icon16.png
+│   ├── icon48.png
+├── lib/
+│   ├── marked/
+│   │   └── marked.min.js
+│   └── prism/
+│       ├── prism-gherkin.js
+│       ├── prism-okaidia.css
+│       ├── prism-typescript.js
+│       └── prism.js
+├── src/
+│   ├── background/
+│   │   └── background.js
+│   ├── content_scripts/
+│   │   ├── content.js
+│   │   └── inspect.css
+│   ├── data/
+│   │   └── dropdown-data.json
+│   ├── scripts/
+│   │   ├── api/
+│   │   │   ├── groq-api.js
+│   │   │   ├── openai-api.js
+│   │   │   └── testleaf-api.js
+│   │   ├── prompts/
+│   │   │   ├── gherkin.js
+│   │   │   ├── manual.js
+│   │   │   ├── playwright.js
+│   │   │   └── selenium.js
+│   │   ├── log.js
+│   │   └── prompts.js
+│   └── sidepanel/
+│       ├── codegenerate.js
+│       ├── settings.js
+│       ├── sidepanel.css
+│       ├── sidepanel.html
+│       └── sidepanel.js
+├── README.md
+├── fileinfo.txt
+├── filestructure.txt
+└── manifest.json
+
+DIRECTORY SUMMARY:
+------------------
+Total Directories: 13
+Total Files: 30
+
+KEY ENTRY POINTS:
+-----------------
+- manifest.json → Extension configuration
+- src/sidepanel/sidepanel.html → Main UI
+- src/background/background.js → Service worker
+- src/content_scripts/content.js → DOM inspector
+- src/scripts/prompts.js → Prompt orchestrator
+- src/sidepanel/codegenerate.js → Test generation logic

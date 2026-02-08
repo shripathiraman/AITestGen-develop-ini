@@ -1,0 +1,26 @@
+.element-highlight {
+  outline: 2px solid #f59e0b !important;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3) !important;
+  position: relative;
+  z-index: 9999;
+}
+
+.element-tooltip {
+  position: absolute;
+  background: #1e293b;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 10000;
+  pointer-events: none;
+  transform: translateY(-100%);
+  white-space: nowrap;
+}
+
+.element-highlight, 
+.element-selected-highlight, 
+.element-tooltip {
+    transition: none !important;
+    animation: none !important;
+}

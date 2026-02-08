@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Case Generator</title>
+  <link rel="stylesheet" href="sidepanel.css">
+  <link rel="stylesheet" href="../../lib/prism/prism-okaidia.css">
+  <script src="../../lib/marked/marked.min.js"></script>
+  <script src="../../lib/prism/prism.js"></script>
+  <script src="../../lib/prism/prism-typescript.js"></script>
+  <script src="../../lib/prism/prism-gherkin.js"></script>
+</head>
+
+<body>
+  <div class="tabs">
+    <button id="generator-tab" class="active">
+      <span class="tab-icon">📋</span> Case Carft AI
+    </button>
+    <button id="settings-tab">
+      <span class="tab-icon">⚙️</span> Settings
+    </button>
+  </div>
+
+  <div id="generator" class="tab-content active">
+
+    <div class="section">
+      <div class="section-title">
+        <span class="section-icon">🔍</span>
+        <h5>Inspect Elements</h5>
+      </div>
+      <div class="button-group">
+        <button id="inspect-btn">
+          <span class="tab-icon">🔍</span> Inspect
+        </button>
+        <button id="stop-btn" disabled>
+          <span class="tab-icon">⏹️</span> Stop
+        </button>
+        <button id="reset-btn">
+          <span class="tab-icon">🔄</span> Reset
+        </button>
+        <button id="generate-btn">
+          <span class="tab-icon">✨</span> Generate
+        </button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="section-icon">📍</span>
+        <h5>Elements Selected <span id="element-count">0</span></h5>
+      </div>
+      <div id="selected-elements" class="element-list"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="section-icon">📝</span>
+        <h5>Additional Context (Optional)</h5>
+      </div>
+      <textarea id="context-input"
+        placeholder="Add more context to help the AI generate better test cases..."></textarea>
+    </div>
+
+    <div class="section output-section">
+      <!-- 1. Test Case Section -->
+      <div id="test-case-output" class="output-block" style="display:none;">
+        <div class="section-title">
+          <span class="section-icon">📝</span>
+          <h5>Test Case <small id="tc-label-detail"></small></h5>
+        </div>
+        <textarea id="output-area-test-case" readonly style="display:none;"></textarea>
+        <div id="output-preview-test-case" class="markdown-body output-preview-box"></div>
+        <div class="output-actions">
+          <button class="copy-btn-dynamic" data-target="output-area-test-case"><span class="tab-icon">📋</span>
+            Copy</button>
+          <button class="download-btn-dynamic" data-target="output-area-test-case" data-filename="test_case"><span
+              class="tab-icon">📥</span> Download</button>
+        </div>
+      </div>
+
+      <!-- 2. Page Object Model Section -->
+      <div id="pom-output" class="output-block" style="display:none; margin-top:15px;">
+        <div class="section-title">
+          <span class="section-icon">🏗️</span>
+          <h5>Page Object Model <small id="pom-label-detail"></small></h5>
+        </div>
+        <textarea id="output-area-pom" readonly style="display:none;"></textarea>
+        <div id="output-preview-pom" class="markdown-body output-preview-box"></div>
+        <div class="output-actions">
+          <button class="copy-btn-dynamic" data-target="output-area-pom"><span class="tab-icon">📋</span> Copy</button>
+          <button class="download-btn-dynamic" data-target="output-area-pom" data-filename="page_object"><span
+              class="tab-icon">📥</span> Download</button>
+        </div>
+      </div>
+
+      <!-- 3. Test Script Section -->
+      <div id="script-output" class="output-block" style="display:none; margin-top:15px;">
+        <div class="section-title">
+          <span class="section-icon">💻</span>
+          <h5>Test Script <small id="script-label-detail"></small></h5>
+        </div>
+        <textarea id="output-area-script" readonly style="display:none;"></textarea>
+        <div id="output-preview-script" class="markdown-body output-preview-box"></div>
+        <div class="output-actions">
+          <button class="copy-btn-dynamic" data-target="output-area-script"><span class="tab-icon">📋</span>
+            Copy</button>
+          <button class="download-btn-dynamic" data-target="output-area-script" data-filename="test_script"><span
+              class="tab-icon">📥</span> Download</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="settings" class="tab-content">
+    <div class="section">
+
+      <div class="form-group">
+        <label>
+          <span class="icon">🛠️</span>
+          Automation Tool
+        </label>
+        <select id="automation-tool">
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <span class="icon">🌐</span>
+          Programming Language
+        </label>
+        <select id="language">
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <span class="icon">🤖</span>
+          LLM Provider
+        </label>
+        <select id="llm-provider">
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <span class="icon">🧠</span>
+          LLM Model
+        </label>
+        <select id="llm-model">
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <span class="icon">🔑</span>
+          API Key
+        </label>
+        <input type="password" id="api-key" placeholder="Enter your API key">
+      </div>
+
+      <div class="section ai-output">
+        <div class="section-title ai-output-title">
+          AI Output's
+        </div>
+
+        <div class="toggle-container">
+          <div class="toggle-header">
+            <div class="toggle-title">Test Case Output</div>
+            <div class="toggle-description">Choose between manual tests or feature files</div>
+          </div>
+          <div class="dual-toggle">
+            <div class="dual-option active" data-value="manual">Manual Test</div>
+            <div class="dual-option" data-value="feature">Feature File</div>
+          </div>
+        </div>
+
+        <div class="switch-toggle">
+          <div class="switch-label">
+            <div class="toggle-title">Page Object Model</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="test-page">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="switch-toggle">
+          <div class="switch-label">
+            <div class="toggle-title">Test Script</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="test-script">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="switch-toggle cool-grey-background">
+        <div class="switch-label">
+          <div class="toggle-title">Enable Multi-Page Selection</div>
+          <div class="toggle-description">Capture elements across multiple pages</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="multi-page" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <button id="save-settings">
+        <span class="tab-icon">💾</span> Save Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- <script src="sidepanel.js"></script> -->
+  <script type="module" src="codegenerate.js"></script>
+  <script type="module" src="sidepanel.js"></script>
+  <script src="../scripts/log.js"></script>
+  <script src="settings.js"></script>
+</body>
+
+</html>

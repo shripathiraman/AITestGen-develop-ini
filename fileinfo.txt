@@ -1,0 +1,66 @@
+Project File Usage Analysis
+Date: 2026-02-03
+Extension: AI Test Case Generator v1.1.0
+
+# ACTIVE / IN-USE FILES
+-----------------------
+These files are referenced in manifest.json or imported by active scripts.
+
+1. Core Extension Files
+   - manifest.json (Main extension configuration)
+   - src/background/background.js (Service worker)
+   - src/content_scripts/content.js (DOM inspection & element selection)
+   - src/content_scripts/inspect.css (Inspector UI styling)
+   - src/scripts/log.js (Centralized logging utility)
+
+2. Side Panel UI
+   - src/sidepanel/sidepanel.html (Main UI entry point)
+   - src/sidepanel/sidepanel.css (Side panel styling)
+   - src/sidepanel/sidepanel.js (UI controller & navigation)
+   - src/sidepanel/codegenerate.js (Code generation logic & LLM orchestration)
+   - src/sidepanel/settings.js (Settings management)
+
+3. Prompt System
+   - src/scripts/prompts.js (Main prompt builder & orchestrator)
+   - src/scripts/prompts/selenium.js (Selenium-specific prompts)
+   - src/scripts/prompts/playwright.js (Playwright-specific prompts)
+   - src/scripts/prompts/gherkin.js (Gherkin/Cucumber prompts)
+   - src/scripts/prompts/manual.js (Manual test case prompts)
+
+4. API Integrations
+   - src/scripts/api/groq-api.js (Groq API client)
+   - src/scripts/api/openai-api.js (OpenAI API client)
+   - src/scripts/api/testleaf-api.js (Testleaf API client)
+
+5. External Libraries
+   - lib/marked/marked.min.js (Markdown parsing, used in sidepanel.html)
+   - lib/prism/prism.js (Syntax highlighting core)
+   - lib/prism/prism-typescript.js (TypeScript syntax support)
+6. Data & Assets
+   - src/data/dropdown-data.json (UI dropdown configurations)
+   - icons/icon16.png (Extension icon 16x16)
+   - icons/icon48.png (Extension icon 48x48)
+   - icons/icon128.png (Extension icon 128x128)
+
+# ARCHITECTURE OVERVIEW
+-----------------------
+The extension uses a Chrome Side Panel architecture with:
+- Background service worker for extension lifecycle management
+- Content scripts for DOM inspection and element highlighting
+- Side panel UI for test generation and settings
+- Multi-provider LLM API support (Groq, OpenAI, Testleaf)
+- Modular prompt system supporting multiple automation frameworks
+- Parallel generation capabilities for Manual Test Cases and Automation Scripts (configurable)
+
+# CURRENT PROMPT LOGGING STATUS
+--------------------------------
+✅ Centralized Logging Implemented:
+   - All components use `src/scripts/log.js`.
+   - `Logger.debug` flag controls verbosity globally.
+
+# NOTES
+-------
+- All APIs use ES6 modules (import/export)
+- Unified logging via `src/scripts/log.js`; debug mode controlled by `Logger.debug`
+- The extension supports Selenium, Playwright, and Cucumber/Gherkin
+- Multi-language support: Java, TypeScript, JavaScript, Python
