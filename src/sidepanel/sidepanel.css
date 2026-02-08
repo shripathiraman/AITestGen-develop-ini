@@ -254,6 +254,18 @@ body {
 }
 
 
+.warning-banner {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 15px;
+  font-size: 0.85rem;
+  text-align: center;
+  line-height: 1.4;
+}
+
 .output-actions {
   display: flex;
   gap: 10px;
