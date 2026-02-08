@@ -75,8 +75,39 @@ The **AI Test Case Generator** is a powerful Chrome Extension designed to stream
 
 ## 🔒 Privacy & Security
 
-*   **Local Storage**: Your API keys and settings are stored locally in your browser (`chrome.storage.local`).
-*   **Data Transmission**: The extension sends only the DOM structure of selected elements and your prompt to the chosen AI provider. No other browsing data is collected.
+### Privacy & Data Handling
+
+This extension operates **entirely client-side**. No data is collected or stored by the extension developer.
+
+*   **Your Data, Your Control**: DOM content and page information is sent **directly** to your configured LLM provider (Groq, OpenAI, or Testleaf) using **your API key**.
+*   **You Are the Data Controller**: You are responsible for ensuring compliance with your organization's data policies and applicable regulations (GDPR, etc.) when inspecting pages.
+*   **No Centralized Collection**: The extension developer does not have access to your API keys, inspected pages, or generated test cases.
+
+### PII Sanitization (Built-In Protection)
+
+To help protect sensitive information, the extension includes **automatic PII redaction**:
+
+*   **✅ Enabled by Default**: PII sanitization is ON by default in Settings.
+*   **🧠 Smart Detection**: Uses NLP (Compromise.js) to detect and redact:
+    *   Personal names → `[REDACTED_PERSON]`
+    *   Email addresses → `[REDACTED_EMAIL]`
+    *   Phone numbers → `[REDACTED_PHONE]`
+*   **🔒 Pattern Masking**: Automatically masks:
+    *   Password fields
+    *   Credit card numbers
+    *   IBAN/account numbers
+*   **⚠️ User Responsibility**: You will be prompted with a warning if you disable PII sanitization.
+
+### Best Practices
+
+*   **Don't inspect production systems** with real customer data unless you have explicit consent to send that data to your LLM provider.
+*   **Review your LLM provider's data policy** (Groq, OpenAI, Testleaf) to understand how they handle transmitted data.
+*   **Keep PII Sanitization enabled** when working with potentially sensitive information.
+
+### Local Storage
+
+*   **API Keys**: Stored locally in your browser (`chrome.storage.local`) and encrypted by Chrome.
+*   **Settings & Preferences**: Saved locally; never transmitted to third parties.
 
 ---
 
@@ -90,4 +121,4 @@ The **AI Test Case Generator** is a powerful Chrome Extension designed to stream
 
 ---
 
-*Built with ❤️ for QA Engineers.*
+*Built with ❤️ for Business Analyst / AI enthusiasts / QA Engineers.*

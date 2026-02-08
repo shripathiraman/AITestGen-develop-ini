@@ -1,0 +1,18 @@
+# Compliance audit documentation (internal use only)
+docs/COMPLIANCE_AUDIT.md
+
+# Node modules (if npm is added in future)
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Extension packaging
+*.zip
+*.crx
+*.pem

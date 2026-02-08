@@ -23,7 +23,7 @@ class SettingsManager {
       'save-settings', 'automation-tool', 'llm-provider',
       'api-key', 'language', 'llm-model',
       'multi-page', 'test-page', 'test-script',
-      'api-key-error'
+      'api-key-error', 'sanitize-pii'
     ];
     ids.forEach(id => {
       this.elements[id] = document.getElementById(id);
@@ -155,7 +155,8 @@ class SettingsManager {
       multiPage: true,
       featureTest: false, // This was in the storage keys but not used in UI, maintaining for consistency
       testPage: false,
-      testScript: false
+      testScript: false,
+      sanitizePii: true
     };
 
     const settings = await chrome.storage.local.get(defaultSettings);
@@ -189,6 +190,7 @@ class SettingsManager {
     this.elements['multi-page'].checked = settings.multiPage;
     this.elements['test-page'].checked = settings.testPage;
     this.elements['test-script'].checked = settings.testScript;
+    this.elements['sanitize-pii'].checked = settings.sanitizePii;
 
     this.log("Settings loaded and applied to UI.");
   }
@@ -254,7 +256,8 @@ class SettingsManager {
       outputFormat: document.querySelector('.dual-option.active').dataset.value, // Still need to query as it's not cached in elements specifically
       multiPage: this.elements['multi-page'].checked,
       testPage: this.elements['test-page'].checked,
-      testScript: this.elements['test-script'].checked
+      testScript: this.elements['test-script'].checked,
+      sanitizePii: this.elements['sanitize-pii'].checked
     };
 
     await chrome.storage.local.set(settings);

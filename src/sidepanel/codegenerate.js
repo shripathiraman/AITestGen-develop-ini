@@ -94,7 +94,9 @@ export class CodeGenerator {
       'apiKey',
       'outputFormat',
       'testPage',
-      'testScript'
+      'testPage',
+      'testScript',
+      'sanitizePii'
     ]);
     this.log("DEBUG: Retrieved settings from storage:", settings);
 
@@ -143,6 +145,29 @@ export class CodeGenerator {
       const context = this.elements['context-input'].value;
       await chrome.storage.local.set({ context });
 
+      // --- PII Sanitization Check ---
+      let elementsToProcess = JSON.parse(JSON.stringify(this.currentElements)); // Deep copy to avoid mutating original
+
+      if (settings.sanitizePii === false) {
+        // PII is NOT sanitized -> Warn User
+        const userConfirmed = confirm("PII has not been checked, which means we have a high possibility of sending sensitive info to AI.\n\nDo you want to continue?");
+
+        if (!userConfirmed) {
+          this.log("Generation cancelled by user due to PII warning.");
+          // Re-enable buttons before returning
+          this.elements['inspect-btn'].disabled = btnStates.inspect;
+          this.elements['stop-btn'].disabled = btnStates.stop;
+          this.elements['reset-btn'].disabled = btnStates.reset;
+          this.elements['generate-btn'].disabled = btnStates.generate;
+          return;
+        }
+      } else {
+        // PII shoud be sanitized -> Apply Sanitization Logic
+        this.log("Sanitizing PII from selected elements...");
+        elementsToProcess = this.sanitizeDOM(elementsToProcess);
+      }
+      // -----------------------------
+
       // 3. Requirements
       const requirements = {
         manual: settings.outputFormat === 'manual',
@@ -155,7 +180,7 @@ export class CodeGenerator {
 
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const promptPayload = {
-        domContent: JSON.stringify(this.currentElements, null, 2),
+        domContent: JSON.stringify(elementsToProcess, null, 2),
         userAction: context || "No specific action provided",
         pageUrl: tab?.url || "unknown",
         tool: settings.automationTool,
@@ -366,5 +391,120 @@ export class CodeGenerator {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
+  }
+
+  /**
+   * sanitizeDOM
+   * masks sensitive values and patterns in the captured HTML content.
+   */
+  sanitizeDOM(elements) {
+    return elements.map(el => {
+      let sanitizedHtml = el.html || "";
+
+      // 1. Attribute Masking (Regex)
+      // Mask 'value' for password inputs
+      sanitizedHtml = sanitizedHtml.replace(/(<input[^>]*type=["']password["'][^>]*value=["'])([^"']*)(["'])/gi, '$1[REDACTED_PASSWORD]$3');
+
+      // Mask 'value' for sensitive keywords in ID/Name/Class/Autocomplete
+      const sensitiveKeywords = "password|secret|token|key|ssn|credit-card|card-number|cvc|cvv|account-number";
+      const sensitivePattern = new RegExp(`((id|name|class|autocomplete)=["'][^"']*(${sensitiveKeywords})[^"']*["'][^>]*value=["'])([^"']*)(["'])`, 'gi');
+
+      sanitizedHtml = sanitizedHtml.replace(sensitivePattern, '$1[REDACTED_SENSITIVE]$5');
+
+      // 2. Text Content Redaction (Compromise NLP + Regex Fallback)
+      // We use a temporary DOM element to safely traverse text nodes without braking HTML structure
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = sanitizedHtml;
+
+      this.sanitizeTextNodes(tempDiv);
+
+      sanitizedHtml = tempDiv.innerHTML;
+
+      // 3. Regex Fallback for strict patterns (Credit Cards, IBANs) which NLP might miss
+      const ccPattern = /\b(?:\d{4}[-\s]?){3}\d{4}\b/g;
+      sanitizedHtml = sanitizedHtml.replace(ccPattern, '[REDACTED_CC]');
+
+      const ibanPattern = /\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b/g;
+      sanitizedHtml = sanitizedHtml.replace(ibanPattern, '[REDACTED_IBAN]');
+
+      return {
+        ...el,
+        html: sanitizedHtml,
+        attributes: this.sanitizeAttributes(el.attributes)
+      };
+    });
+  }
+
+  sanitizeTextNodes(node) {
+    if (node.nodeType === 3) { // Node.TEXT_NODE
+      const parent = node.parentElement;
+      if (parent && (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE')) return;
+
+      let text = node.textContent;
+      if (!text || !text.trim()) return;
+
+      // NLP Redaction
+      if (window.nlp) {
+        try {
+          const doc = window.nlp(text);
+          let modified = false;
+
+          // Redact People
+          if (doc.people().found) { doc.people().replaceWith('[REDACTED_PERSON]'); modified = true; }
+
+          // Redact Emails
+          if (doc.emails().found) { doc.emails().replaceWith('[REDACTED_EMAIL]'); modified = true; }
+
+          // Redact Phone Numbers
+          if (doc.phoneNumbers().found) { doc.phoneNumbers().replaceWith('[REDACTED_PHONE]'); modified = true; }
+
+          if (modified) {
+            text = doc.text();
+          }
+        } catch (e) {
+          // Fallback if NLP fails
+          console.warn("NLP Sanitization failed for text node:", e);
+        }
+      }
+
+      // Regex Fallback for Email/Phone if NLP missed or is absent
+      const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+      text = text.replace(emailPattern, '[REDACTED_EMAIL]');
+
+      // Simple Phone Regex (fallback)
+      const phonePattern = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
+      text = text.replace(phonePattern, '[REDACTED_PHONE]');
+
+      node.textContent = text;
+    } else {
+      node.childNodes.forEach(child => this.sanitizeTextNodes(child));
+    }
+  }
+
+  sanitizeAttributes(attributes) {
+    if (!attributes) return {};
+    const sanitized = { ...attributes };
+    const sensitiveKeys = ['value', 'data-value'];
+    const sensitiveKeywords = ['password', 'secret', 'token', 'key', 'ssn', 'cvc', 'cvv'];
+
+    for (const key in sanitized) {
+      const lowerKey = key.toLowerCase();
+      // Check if attribute name is suspicious
+      if (sensitiveKeywords.some(k => lowerKey.includes(k))) {
+        sanitized[key] = '[REDACTED_ATTR_NAME]';
+      }
+      // Check if specific keys have sensitive values
+      if (sensitiveKeys.includes(lowerKey)) {
+        // Perform check if value looks sensitive? For now, if we are sanitizing attributes object, 
+        // we might just want to be safe if the key *or* context implies sensitivity.
+        // But the `html` string replacement is the primary defense for the LLM prompt.
+        // Let's rely on the regexes above for the bulk.
+        // Implementing specific attribute masking here as a fallback
+        if (sanitized['type'] === 'password') {
+          sanitized[key] = '[REDACTED_PASSWORD]';
+        }
+      }
+    }
+    return sanitized;
   }
 }
