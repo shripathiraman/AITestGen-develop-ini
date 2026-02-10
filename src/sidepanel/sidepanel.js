@@ -86,7 +86,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         await chrome.tabs.sendMessage(tab.id, { action: "startInspect" });
         if (!isInspecting) {
           isInspecting = true;
-          alert('test')
         }
         inspectBtn.disabled = true;
         stopBtn.disabled = false;
@@ -94,7 +93,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         Logger.log("[Sidepanel] Sent startInspect message.");
       } catch (error) {
         Logger.error("[Sidepanel] Error sending startInspect message:", error);
-        alert('Failed to start inspector. Make sure the content script is running and has permissions.');
+
+        // Check if the error is due to missing content script
+        if (error.message.includes("Could not establish connection") || error.message.includes("Receiving end does not exist")) {
+          Logger.log("[Sidepanel] Content script not found. Attempting to inject...");
+          try {
+            // Dynamically inject the scripts
+            await chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              files: ['src/scripts/log.js', 'src/content_scripts/content.js']
+            });
+            // Inject CSS as well
+            await chrome.scripting.insertCSS({
+              target: { tabId: tab.id },
+              files: ['src/content_scripts/inspect.css']
+            });
+
+            Logger.log("[Sidepanel] Scripts injected. Retrying startInspect...");
+            // Retry sending the message
+            await chrome.tabs.sendMessage(tab.id, { action: "startInspect" });
+
+            if (!isInspecting) {
+              isInspecting = true;
+            }
+            inspectBtn.disabled = true;
+            stopBtn.disabled = false;
+            generateBtn.disabled = true;
+            Logger.log("[Sidepanel] Sent startInspect message after injection.");
+
+          } catch (retryError) {
+            Logger.error("[Sidepanel] Failed to inject/retry:", retryError);
+            alert('Failed to start inspector. Please refresh the web page and try again.');
+          }
+        } else {
+          alert('Failed to start inspector: ' + error.message);
+        }
       }
     });
   });
@@ -114,22 +147,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         Logger.log("[Sidepanel] Sending resetInspect message to content script.");
-        chrome.tabs.sendMessage(tabs[0].id, { action: "resetInspect" }, () => {
-          currentElements = [];
-          renderElements();
-          // Reset context and output area via CodeGenerator if it exists
-          if (codeGenerator && codeGenerator.elements['context-input']) {
-            codeGenerator.elements['context-input'].value = '';
-          }
-          if (codeGenerator && codeGenerator.elements['output-area']) {
-            codeGenerator.elements['output-area'].value = '';
-          }
-          if (codeGenerator && codeGenerator.elements['output-section']) {
-            codeGenerator.elements['output-section'].style.display = 'none';
-          }
-          chrome.storage.local.remove(['selectedElements', 'context']);
-          Logger.log("[Sidepanel] Cleared selected elements, context, and output from storage.");
-        });
+        if (tabs[0] && tabs[0].id) {
+          chrome.tabs.sendMessage(tabs[0].id, { action: "resetInspect" }, () => {
+            // Check for errors (e.g., content script not found) but proceed with local reset
+            if (chrome.runtime.lastError) {
+              Logger.warn("[Sidepanel] Could not send resetInspect (content script might be missing), but proceeding with local reset:", chrome.runtime.lastError.message);
+            }
+
+            currentElements = [];
+            renderElements();
+            // Reset context and output area via CodeGenerator if it exists
+            if (codeGenerator && codeGenerator.elements['context-input']) {
+              codeGenerator.elements['context-input'].value = '';
+            }
+            if (codeGenerator && codeGenerator.elements['output-area']) {
+              codeGenerator.elements['output-area'].value = '';
+            }
+            if (codeGenerator && codeGenerator.elements['output-section']) {
+              codeGenerator.elements['output-section'].style.display = 'none';
+            }
+            chrome.storage.local.remove(['selectedElements', 'context']);
+            Logger.log("[Sidepanel] Cleared selected elements, context, and output from storage.");
+          });
+        }
       });
     } else {
       Logger.log("[Sidepanel] Reset canceled by user.");
@@ -145,8 +185,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     generateBtn.disabled = false;
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      Logger.log("[Sidepanel] Sending stopInspect message to content script.");
-      chrome.tabs.sendMessage(tabs[0].id, { action: "stopInspect" });
+      if (tabs[0] && tabs[0].id) {
+        Logger.log("[Sidepanel] Sending stopInspect message to content script.");
+        chrome.tabs.sendMessage(tabs[0].id, { action: "stopInspect" }, () => {
+          if (chrome.runtime.lastError) {
+            Logger.warn("[Sidepanel] Could not send stopInspect (content script might be missing):", chrome.runtime.lastError.message);
+          }
+        });
+      }
     });
   }
 

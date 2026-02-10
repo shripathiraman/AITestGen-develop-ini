@@ -4,7 +4,7 @@
  */
 
 const Logger = {
-    debug: false, // Set to false to disable all logs in production
+    debug: true, // Set to false to disable all logs in production
 
     log: function (message, ...args) {
         if (this.debug) {

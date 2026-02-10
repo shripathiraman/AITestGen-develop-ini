@@ -8,7 +8,7 @@ importScripts('../scripts/log.js');
 // --- Internal Debugging Logger ---
 // Using centralized Logger from log.js
 // Logger.debug = true; // Uncomment to force debug mode if needed locally
-_log("Background script initialized.");
+Logger.log("Background script initialized.");
 
 // --- Constants for Message Actions ---
 // Using constants for message action strings reduces typos and improves maintainability.
