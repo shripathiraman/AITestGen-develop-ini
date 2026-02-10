@@ -2,7 +2,7 @@
 
 🚀 **Generate Test Cases, Scripts & Page Objects Instantly from your Browser!**
 
-The **AI Test Case Generator** is a powerful Chrome Extension designed to streamline the QA process. By simply inspecting elements on a webpage, you can use advanced AI (Groq, OpenAI, or Testleaf) to automatically generate professional Test Cases, Gherkin Feature Files, Automation Scripts, and Page Object Models (POM).
+The **AI Test Case Generator** is a powerful Chrome Extension designed to streamline the QA process. By simply inspecting elements on a webpage, you can use advanced AI (Groq, OpenAI, etc.) to automatically generate professional Test Cases, Gherkin Feature Files, Automation Scripts, and Page Object Models (POM).
 
 ## ✨ Key Features
 
@@ -10,7 +10,6 @@ The **AI Test Case Generator** is a powerful Chrome Extension designed to stream
 *   **🤖 Multi-LLM Support**: Choose your preferred AI provider:
     *   **Groq**: Fast and efficient.
     *   **OpenAI (GPT)**: Industry-leading reasoning.
-    *   **Testleaf**: Specialized for testing contexts.
 *   **📝 Versatile Output Formats**:
     *   **Manual Test Cases**: Structured step-by-step instructions.
     *   **Gherkin / Cucumber**: Ready-to-use `.feature` files for BDD.
@@ -37,7 +36,7 @@ The **AI Test Case Generator** is a powerful Chrome Extension designed to stream
 3.  **Configure your preferences**:
     *   **Automation Tool**: Playwright / Selenium.
     *   **Language**: TypeScript, Java, etc.
-    *   **LLM Provider**: Select Groq, OpenAI, or Testleaf.
+    *   **LLM Provider**: Select Groq, OpenAI, etc.
     *   **API Key**: Enter your valid API key for the selected provider.
 4.  **Select Outputs**:
     *   Choose between **Manual Test** or **Feature File**.
@@ -79,7 +78,7 @@ The **AI Test Case Generator** is a powerful Chrome Extension designed to stream
 
 This extension operates **entirely client-side**. No data is collected or stored by the extension developer.
 
-*   **Your Data, Your Control**: DOM content and page information is sent **directly** to your configured LLM provider (Groq, OpenAI, or Testleaf) using **your API key**.
+*   **Your Data, Your Control**: DOM content and page information is sent **directly** to your configured LLM provider (Groq, OpenAI, etc.) using **your API key**.
 *   **You Are the Data Controller**: You are responsible for ensuring compliance with your organization's data policies and applicable regulations (GDPR, etc.) when inspecting pages.
 *   **No Centralized Collection**: The extension developer does not have access to your API keys, inspected pages, or generated test cases.
 
@@ -101,7 +100,7 @@ To help protect sensitive information, the extension includes **automatic PII re
 ### Best Practices
 
 *   **Don't inspect production systems** with real customer data unless you have explicit consent to send that data to your LLM provider.
-*   **Review your LLM provider's data policy** (Groq, OpenAI, Testleaf) to understand how they handle transmitted data.
+*   **Review your LLM provider's data policy** (Groq, OpenAI, etc.) to understand how they handle transmitted data.
 *   **Keep PII Sanitization enabled** when working with potentially sensitive information.
 
 ### Local Storage
@@ -115,10 +114,10 @@ To help protect sensitive information, the extension includes **automatic PII re
 
 *   `src/sidepanel/`: UI logic and Code Generation orchestrator.
 *   `src/scripts/prompts/`: System prompts for different formats (Manual, Gherkin, POM, Script).
-*   `src/scripts/api/`: API clients for Groq, OpenAI, and Testleaf.
+*   `src/scripts/api/`: API clients for Groq, OpenAI, etc.
 *   `src/scripts/log.js`: Centralized logging utility.
 *   `src/content_scripts/`: Logic for inspecting and highlighting DOM elements.
 
 ---
 
-*Built with ❤️ for Business Analyst / AI enthusiasts / QA Engineers.*
+*Built with ❤️ for  AI enthusiasts / Business Analyst / QA Engineers.*
