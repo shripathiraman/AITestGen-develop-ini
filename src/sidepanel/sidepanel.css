@@ -268,17 +268,33 @@ body {
 
 .output-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 15px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.tool-info {
+  font-size: 0.75rem;
+  color: var(--color-secondary);
+  font-weight: 500;
+  margin-right: auto;
 }
 
 .output-actions button {
-  flex: 1;
-  padding: 3px 0;
-  border: none;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 500;
+  font-size: 1rem;
+  background: var(--color-white);
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.output-actions button:hover {
+  background-color: #f1f5f9;
+  border-color: var(--color-primary);
 }
 
 #copy-btn {
@@ -323,6 +339,56 @@ body {
   font-weight: 600;
   font-size: 1rem;
   color: var(--color-primary);
+}
+
+/* Output Tabs */
+.output-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: 15px;
+}
+
+.output-tab {
+  flex: 1;
+  padding: 10px 8px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.output-tab:hover {
+  color: var(--color-primary);
+  background-color: rgba(79, 70, 229, 0.05);
+}
+
+.output-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.output-tab .tab-icon {
+  font-size: 1rem;
+}
+
+/* Output Tab Content */
+.output-tab-content {
+  display: none;
+}
+
+.output-tab-content.active {
+  display: block;
 }
 
 /* Settings Tab Styles */

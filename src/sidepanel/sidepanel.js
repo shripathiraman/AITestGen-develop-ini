@@ -160,9 +160,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (codeGenerator && codeGenerator.elements['context-input']) {
               codeGenerator.elements['context-input'].value = '';
             }
-            if (codeGenerator && codeGenerator.elements['output-area']) {
-              codeGenerator.elements['output-area'].value = '';
-            }
+            // Clear all output textareas and previews
+            document.querySelectorAll('.output-tab-content textarea').forEach(ta => ta.value = '');
+            document.querySelectorAll('.output-tab-content .output-preview-box').forEach(p => p.innerHTML = '');
+            // Reset tab states
+            document.querySelectorAll('.output-tab').forEach(t => { t.classList.remove('active'); t.style.display = 'none'; });
+            document.querySelectorAll('.output-tab-content').forEach(c => c.style.display = 'none');
+            // Hide stats
+            const statsEl = document.getElementById('stats-display');
+            if (statsEl) statsEl.style.display = 'none';
+            // Hide entire output section
             if (codeGenerator && codeGenerator.elements['output-section']) {
               codeGenerator.elements['output-section'].style.display = 'none';
             }

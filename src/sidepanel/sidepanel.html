@@ -66,55 +66,56 @@
         placeholder="Add more context to help the AI generate better test cases..."></textarea>
     </div>
 
-    <div class="section output-section">
+    <div class="section output-section" style="display:none;">
       <!-- Stats Display -->
       <div id="stats-display" class="stats-container" style="display:none;"></div>
 
-      <!-- 1. Test Case Section -->
-      <div id="test-case-output" class="output-block" style="display:none;">
-        <div class="section-title">
-          <span class="section-icon">📝</span>
-          <h5>Test Case <small id="tc-label-detail"></small></h5>
+      <!-- Output Tabs Bar -->
+      <div class="output-tabs" id="output-tabs">
+        <button class="output-tab" id="tab-test-case" data-target="test-case-output" style="display:none;">
+          <span class="tab-icon">📝</span> <span id="tc-tab-label">Test Case</span>
+        </button>
+        <button class="output-tab" id="tab-pom" data-target="pom-output" style="display:none;">
+          <span class="tab-icon">🏗️</span> <span id="pom-tab-label">POM</span>
+        </button>
+        <button class="output-tab" id="tab-script" data-target="script-output" style="display:none;">
+          <span class="tab-icon">💻</span> <span id="script-tab-label">Test Script</span>
+        </button>
+      </div>
+
+      <!-- 1. Test Case Tab Content -->
+      <div id="test-case-output" class="output-tab-content">
+        <div class="output-actions">
+          <button class="copy-btn-dynamic" data-target="output-area-test-case" title="Copy">📋</button>
+          <button class="download-btn-dynamic" data-target="output-area-test-case" data-filename="test_case"
+            title="Download">📥</button>
         </div>
         <textarea id="output-area-test-case" readonly style="display:none;"></textarea>
         <div id="output-preview-test-case" class="markdown-body output-preview-box"></div>
-        <div class="output-actions">
-          <button class="copy-btn-dynamic" data-target="output-area-test-case"><span class="tab-icon">📋</span>
-            Copy</button>
-          <button class="download-btn-dynamic" data-target="output-area-test-case" data-filename="test_case"><span
-              class="tab-icon">📥</span> Download</button>
-        </div>
       </div>
 
-      <!-- 2. Page Object Model Section -->
-      <div id="pom-output" class="output-block" style="display:none; margin-top:15px;">
-        <div class="section-title">
-          <span class="section-icon">🏗️</span>
-          <h5>Page Object Model <small id="pom-label-detail"></small></h5>
+      <!-- 2. Page Object Model Tab Content -->
+      <div id="pom-output" class="output-tab-content">
+        <div class="output-actions">
+          <span class="tool-info" id="pom-tool-info"></span>
+          <button class="copy-btn-dynamic" data-target="output-area-pom" title="Copy">📋</button>
+          <button class="download-btn-dynamic" data-target="output-area-pom" data-filename="page_object"
+            title="Download">📥</button>
         </div>
         <textarea id="output-area-pom" readonly style="display:none;"></textarea>
         <div id="output-preview-pom" class="markdown-body output-preview-box"></div>
-        <div class="output-actions">
-          <button class="copy-btn-dynamic" data-target="output-area-pom"><span class="tab-icon">📋</span> Copy</button>
-          <button class="download-btn-dynamic" data-target="output-area-pom" data-filename="page_object"><span
-              class="tab-icon">📥</span> Download</button>
-        </div>
       </div>
 
-      <!-- 3. Test Script Section -->
-      <div id="script-output" class="output-block" style="display:none; margin-top:15px;">
-        <div class="section-title">
-          <span class="section-icon">💻</span>
-          <h5>Test Script <small id="script-label-detail"></small></h5>
+      <!-- 3. Test Script Tab Content -->
+      <div id="script-output" class="output-tab-content">
+        <div class="output-actions">
+          <span class="tool-info" id="script-tool-info"></span>
+          <button class="copy-btn-dynamic" data-target="output-area-script" title="Copy">📋</button>
+          <button class="download-btn-dynamic" data-target="output-area-script" data-filename="test_script"
+            title="Download">📥</button>
         </div>
         <textarea id="output-area-script" readonly style="display:none;"></textarea>
         <div id="output-preview-script" class="markdown-body output-preview-box"></div>
-        <div class="output-actions">
-          <button class="copy-btn-dynamic" data-target="output-area-script"><span class="tab-icon">📋</span>
-            Copy</button>
-          <button class="download-btn-dynamic" data-target="output-area-script" data-filename="test_script"><span
-              class="tab-icon">📥</span> Download</button>
-        </div>
       </div>
     </div>
   </div>

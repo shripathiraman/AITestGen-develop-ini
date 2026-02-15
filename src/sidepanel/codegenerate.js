@@ -26,7 +26,12 @@ export class CodeGenerator {
     this.elements['reset-btn'] = document.getElementById('reset-btn');
     this.elements['stats-display'] = document.getElementById('stats-display');
 
-    // Output blocks
+    // Output tab buttons
+    this.elements['tab-test-case'] = document.getElementById('tab-test-case');
+    this.elements['tab-pom'] = document.getElementById('tab-pom');
+    this.elements['tab-script'] = document.getElementById('tab-script');
+
+    // Output tab content panels
     this.elements['test-case-block'] = document.getElementById('test-case-output');
     this.elements['pom-block'] = document.getElementById('pom-output');
     this.elements['script-block'] = document.getElementById('script-output');
@@ -39,10 +44,14 @@ export class CodeGenerator {
     this.elements['area-script'] = document.getElementById('output-area-script');
     this.elements['preview-script'] = document.getElementById('output-preview-script');
 
-    // Labels
-    this.elements['tc-detail'] = document.getElementById('tc-label-detail');
-    this.elements['pom-detail'] = document.getElementById('pom-label-detail');
-    this.elements['script-detail'] = document.getElementById('script-label-detail');
+    // Tab labels
+    this.elements['tc-tab-label'] = document.getElementById('tc-tab-label');
+    this.elements['pom-tab-label'] = document.getElementById('pom-tab-label');
+    this.elements['script-tab-label'] = document.getElementById('script-tab-label');
+
+    // Tool info labels (inside content panels)
+    this.elements['pom-tool-info'] = document.getElementById('pom-tool-info');
+    this.elements['script-tool-info'] = document.getElementById('script-tool-info');
   }
 
   async initialize() {
@@ -56,6 +65,11 @@ export class CodeGenerator {
     this.log("Setting up event listeners for generator.");
     this.elements['generate-btn'].addEventListener('click', this.handleGenerateClick.bind(this));
 
+    // Output tab switching
+    document.querySelectorAll('.output-tab').forEach(tab => {
+      tab.addEventListener('click', () => this.switchOutputTab(tab.dataset.target));
+    });
+
     // Dynamic copy/download listeners
     document.addEventListener('click', (e) => {
       if (e.target.closest('.copy-btn-dynamic')) {
@@ -65,6 +79,48 @@ export class CodeGenerator {
         this.handleDownloadClick(e.target.closest('.download-btn-dynamic'));
       }
     });
+  }
+
+  /**
+   * Switches the active output tab.
+   */
+  switchOutputTab(targetId) {
+    // Deactivate all tabs
+    document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
+
+    // Hide ALL content panels via inline style (bulletproof)
+    document.querySelectorAll('.output-tab-content').forEach(c => {
+      c.style.display = 'none';
+    });
+
+    // Activate clicked tab button and show its content panel
+    const tabBtn = document.querySelector(`.output-tab[data-target="${targetId}"]`);
+    const tabContent = document.getElementById(targetId);
+    if (tabBtn) tabBtn.classList.add('active');
+    if (tabContent) tabContent.style.display = 'block';
+  }
+
+  /**
+   * Shows only tabs that have content and activates the first one.
+   */
+  activateOutputTabs() {
+    const visibleTabs = document.querySelectorAll('.output-tab[style*="display: flex"], .output-tab:not([style*="display: none"])');
+    // More reliable: check which tab buttons are visible
+    const tabs = ['tab-test-case', 'tab-pom', 'tab-script'];
+    let firstVisibleTarget = null;
+
+    for (const tabId of tabs) {
+      const btn = this.elements[tabId];
+      if (btn && btn.style.display !== 'none') {
+        if (!firstVisibleTarget) {
+          firstVisibleTarget = btn.dataset.target;
+        }
+      }
+    }
+
+    if (firstVisibleTarget) {
+      this.switchOutputTab(firstVisibleTarget);
+    }
   }
 
   async loadInitialData() {
@@ -140,11 +196,30 @@ export class CodeGenerator {
     // Reset Stats
     this.generationStats = { input: 0, output: 0, latency: 0 };
 
-    // 2. Set Dynamic Labels
-    const toolInfo = `(${settings.automationTool} ${settings.language})`;
-    this.elements['tc-detail'].textContent = `(${settings.outputFormat === 'manual' ? 'Manual' : 'Feature File'})`;
-    this.elements['pom-detail'].textContent = toolInfo;
-    this.elements['script-detail'].textContent = toolInfo;
+    // 2. Set Dynamic Labels on Tab Buttons (clean names only)
+    if (this.elements['tc-tab-label']) {
+      this.elements['tc-tab-label'].textContent = settings.outputFormat === 'manual' ? 'Test Case' : 'Feature File';
+    }
+    if (this.elements['pom-tab-label']) {
+      this.elements['pom-tab-label'].textContent = 'POM';
+    }
+    if (this.elements['script-tab-label']) {
+      this.elements['script-tab-label'].textContent = 'Script';
+    }
+
+    // Set tool info inside content panels
+    const toolInfoText = `${settings.automationTool} · ${settings.language}`;
+    if (this.elements['pom-tool-info']) {
+      this.elements['pom-tool-info'].textContent = toolInfoText;
+    }
+    if (this.elements['script-tool-info']) {
+      this.elements['script-tool-info'].textContent = toolInfoText;
+    }
+
+    // Hide all tab buttons initially
+    this.elements['tab-test-case'].style.display = 'none';
+    this.elements['tab-pom'].style.display = 'none';
+    this.elements['tab-script'].style.display = 'none';
 
     try {
       const context = this.elements['context-input'].value;
@@ -243,9 +318,12 @@ export class CodeGenerator {
           Logger.error("Automation Generation Failed:", e);
           // Fallback error display in script block
           this.elements['area-script'].value = `Error generating script: ${e.message}`;
-          this.elements['script-block'].style.display = 'block';
+          this.elements['tab-script'].style.display = 'flex';
         }
       }
+
+      // Activate first visible tab AFTER all content is parsed
+      this.activateOutputTabs();
 
       if (this.elements['output-section']) {
         this.elements['output-section'].style.display = 'block';
@@ -360,7 +438,7 @@ export class CodeGenerator {
     let tcContent = extractContent("MANUAL_TEST") || extractContent("FEATURE_FILE");
     if (tcContent) {
       this.log("Found Test Case content, first 100 chars:", tcContent.substring(0, 100));
-      this.elements['test-case-block'].style.display = 'block';
+      this.elements['tab-test-case'].style.display = 'flex';
       this.elements['area-test-case'].value = tcContent;
       // If it's a feature file and doesn't have backticks, wrap it
       if (requirements.feature && !tcContent.includes('```')) {
@@ -374,7 +452,7 @@ export class CodeGenerator {
     const pomContent = extractContent("POM");
     if (pomContent) {
       this.log("Found POM content, first 100 chars:", pomContent.substring(0, 100));
-      this.elements['pom-block'].style.display = 'block';
+      this.elements['tab-pom'].style.display = 'flex';
       this.elements['area-pom'].value = pomContent;
       let displayContent = pomContent;
       if (!displayContent.includes('```')) {
@@ -388,7 +466,7 @@ export class CodeGenerator {
     const scriptContent = extractContent("TEST_SCRIPT");
     if (scriptContent) {
       this.log("Found Test Script content, first 100 chars:", scriptContent.substring(0, 100));
-      this.elements['script-block'].style.display = 'block';
+      this.elements['tab-script'].style.display = 'flex';
       this.elements['area-script'].value = scriptContent;
       let displayContent = scriptContent;
       if (!displayContent.includes('```')) {
@@ -402,16 +480,18 @@ export class CodeGenerator {
       this.log(`Parser failed to find any tags. Performing fallback dump to ${fallbackTarget}.`);
 
       if (fallbackTarget === 'script') {
-        this.elements['script-block'].style.display = 'block';
+        this.elements['tab-script'].style.display = 'flex';
         this.elements['area-script'].value = content;
         this.elements['preview-script'].innerHTML = this.renderMarkdown(content);
       } else {
-        // Default to test case block
-        this.elements['test-case-block'].style.display = 'block';
+        // Default to test case tab
+        this.elements['tab-test-case'].style.display = 'flex';
         this.elements['area-test-case'].value = content;
         this.elements['preview-test-case'].innerHTML = this.renderMarkdown(content);
       }
     }
+
+    // NOTE: activateOutputTabs is called from handleGenerateClick, not here
 
     // Ensure syntax highlighting is applied to all new code blocks
     setTimeout(() => {
