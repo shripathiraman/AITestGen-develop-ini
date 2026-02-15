@@ -8,6 +8,7 @@ export class CodeGenerator {
     // Removed local debugMode in favor of centralized Logger.debug
     this.elements = {}; // Cache for frequently accessed DOM elements
     this.currentElements = []; // To store elements selected for code generation
+    this.generationStats = { input: 0, output: 0, latency: 0 };
     this.initialize();
   }
 
@@ -23,6 +24,7 @@ export class CodeGenerator {
     this.elements['inspect-btn'] = document.getElementById('inspect-btn');
     this.elements['stop-btn'] = document.getElementById('stop-btn');
     this.elements['reset-btn'] = document.getElementById('reset-btn');
+    this.elements['stats-display'] = document.getElementById('stats-display');
 
     // Output blocks
     this.elements['test-case-block'] = document.getElementById('test-case-output');
@@ -135,6 +137,9 @@ export class CodeGenerator {
     this.elements['preview-pom'].innerHTML = '';
     this.elements['preview-script'].innerHTML = '';
 
+    // Reset Stats
+    this.generationStats = { input: 0, output: 0, latency: 0 };
+
     // 2. Set Dynamic Labels
     const toolInfo = `(${settings.automationTool} ${settings.language})`;
     this.elements['tc-detail'].textContent = `(${settings.outputFormat === 'manual' ? 'Manual' : 'Feature File'})`;
@@ -202,8 +207,14 @@ export class CodeGenerator {
         this.log(`Sending Manual/Gherkin request to ${settings.llmProvider}...`);
 
         try {
+          const startTime = Date.now();
           const response = await api.sendMessage(manualPrompt, settings.llmModel);
+          const latency = Date.now() - startTime;
+
           const content = response.content || response;
+          const usage = response.usage || null;
+          Logger.log('[STATS] Manual call done. Usage:', usage, 'Latency:', latency);
+          this.accumulateStats(usage, latency);
           this.parseAndDisplay(content, requirements, settings, 'test-case');
         } catch (e) {
           Logger.error("Manual/Gherkin Generation Failed:", e);
@@ -219,8 +230,14 @@ export class CodeGenerator {
         this.log(`Sending Automation request to ${settings.llmProvider}...`);
 
         try {
+          const startTime = Date.now();
           const response = await api.sendMessage(automationPrompt, settings.llmModel);
+          const latency = Date.now() - startTime;
+
           const content = response.content || response;
+          const usage = response.usage || null;
+          Logger.log('[STATS] Automation call done. Usage:', usage, 'Latency:', latency);
+          this.accumulateStats(usage, latency);
           this.parseAndDisplay(content, requirements, settings, 'script');
         } catch (e) {
           Logger.error("Automation Generation Failed:", e);
@@ -238,11 +255,58 @@ export class CodeGenerator {
       Logger.error("Error during generation:", error);
       alert(`Error: ${error.message}`);
     } finally {
+      // ALWAYS render stats - even if an error occurred during generation
+      Logger.log('[STATS] Finally block reached. generationStats:', this.generationStats);
+      this.renderStats();
+
       this.elements['inspect-btn'].disabled = btnStates.inspect;
       this.elements['stop-btn'].disabled = btnStates.stop;
       this.elements['reset-btn'].disabled = btnStates.reset;
       this.elements['generate-btn'].disabled = btnStates.generate;
     }
+  }
+
+  /**
+   * Accumulates stats from each API call without rendering.
+   */
+  accumulateStats(usage, latency) {
+    if (usage) {
+      this.generationStats.input += (usage.input_tokens || 0);
+      this.generationStats.output += (usage.output_tokens || 0);
+    }
+    if (latency) {
+      this.generationStats.latency += latency;
+    }
+  }
+
+  /**
+   * Renders the accumulated stats into the DOM.
+   * Uses direct document.getElementById to avoid any caching issues.
+   */
+  renderStats() {
+    const el = document.getElementById('stats-display');
+    Logger.log('[STATS] renderStats called. Element found:', !!el);
+    if (!el) return;
+
+    const { input, output, latency } = this.generationStats;
+    Logger.log('[STATS] Rendering:', { input, output, latency });
+
+    el.style.display = 'flex';
+    el.innerHTML = `
+      <div class="stat-item">
+        <span class="stat-label">Input Tokens</span>
+        <span class="stat-value">${input.toLocaleString()}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Output Tokens</span>
+        <span class="stat-value">${output.toLocaleString()}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Latency</span>
+        <span class="stat-value">${(latency / 1000).toFixed(2)}s</span>
+      </div>
+    `;
+    Logger.log('[STATS] innerHTML set. Element display:', el.style.display, 'offsetHeight:', el.offsetHeight);
   }
 
   parseAndDisplay(content, requirements, settings, fallbackTarget = 'test-case') {

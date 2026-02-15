@@ -1,5 +1,5 @@
 Project File Usage Analysis
-Date: 2026-02-03
+Date: 2026-02-15
 Extension: AI Test Case Generator v1.1.0
 
 # ACTIVE / IN-USE FILES
@@ -15,9 +15,9 @@ These files are referenced in manifest.json or imported by active scripts.
 
 2. Side Panel UI
    - src/sidepanel/sidepanel.html (Main UI entry point)
-   - src/sidepanel/sidepanel.css (Side panel styling)
+   - src/sidepanel/sidepanel.css (Side panel styling incl. stats display, sticky tabs)
    - src/sidepanel/sidepanel.js (UI controller & navigation)
-   - src/sidepanel/codegenerate.js (Code generation logic & LLM orchestration)
+   - src/sidepanel/codegenerate.js (Code generation logic, LLM orchestration & stats tracking)
    - src/sidepanel/settings.js (Settings management)
 
 3. Prompt System
@@ -28,19 +28,30 @@ These files are referenced in manifest.json or imported by active scripts.
    - src/scripts/prompts/manual.js (Manual test case prompts)
 
 4. API Integrations
-   - src/scripts/api/groq-api.js (Groq API client)
-   - src/scripts/api/openai-api.js (OpenAI API client)
-   - src/scripts/api/testleaf-api.js (Testleaf API client)
+   - src/scripts/api/groq-api.js (Groq API client, returns usage stats)
+   - src/scripts/api/openai-api.js (OpenAI API client, returns usage stats)
+   - src/scripts/api/testleaf-api.js (Testleaf API client, returns usage stats)
 
 5. External Libraries
+   - lib/compromise/compromise.min.js (NLP library for PII detection/sanitization)
    - lib/marked/marked.min.js (Markdown parsing, used in sidepanel.html)
    - lib/prism/prism.js (Syntax highlighting core)
    - lib/prism/prism-typescript.js (TypeScript syntax support)
+   - lib/prism/prism-gherkin.js (Gherkin syntax support)
+   - lib/prism/prism-okaidia.css (Prism dark theme)
+
 6. Data & Assets
    - src/data/dropdown-data.json (UI dropdown configurations)
    - icons/icon16.png (Extension icon 16x16)
    - icons/icon48.png (Extension icon 48x48)
    - icons/icon128.png (Extension icon 128x128)
+
+7. Documentation
+   - README.md (Project overview & usage guide)
+   - docs/API_INTEGRATION.md (Guide for adding new LLM providers)
+   - docs/COMPLIANCE_AUDIT.md (GDPR/EU AI Act/DORA compliance audit)
+   - docs/DEVELOPMENT.md (Local development & debugging guide)
+   - docs/PROMPTS.md (Prompt engineering guide for ICE-TOP framework)
 
 # ARCHITECTURE OVERVIEW
 -----------------------
@@ -49,18 +60,31 @@ The extension uses a Chrome Side Panel architecture with:
 - Content scripts for DOM inspection and element highlighting
 - Side panel UI for test generation and settings
 - Multi-provider LLM API support (Groq, OpenAI, Testleaf)
-- Modular prompt system supporting multiple automation frameworks
-- Parallel generation capabilities for Manual Test Cases and Automation Scripts (configurable)
+- Modular prompt system using ICE-TOP framework
+- Parallel generation for Manual Test Cases and Automation Scripts
+- Token usage & latency stats tracking across API calls
+- PII sanitization via NLP (Compromise.js) and regex patterns
 
-# CURRENT PROMPT LOGGING STATUS
---------------------------------
+# SCRIPT LOADING ORDER (sidepanel.html)
+-----------------------------------------
+1. lib/compromise/compromise.min.js (NLP, regular script)
+2. src/scripts/log.js (Logger, regular script — must load before modules)
+3. src/sidepanel/codegenerate.js (ES module)
+4. src/sidepanel/sidepanel.js (ES module, imports CodeGenerator)
+5. src/sidepanel/settings.js (regular script)
+
+# LOGGING
+----------
 ✅ Centralized Logging Implemented:
    - All components use `src/scripts/log.js`.
    - `Logger.debug` flag controls verbosity globally.
+   - Logger must be loaded as a regular script BEFORE ES modules.
 
 # NOTES
 -------
 - All APIs use ES6 modules (import/export)
+- API classes return { content, usage } objects for stats tracking
 - Unified logging via `src/scripts/log.js`; debug mode controlled by `Logger.debug`
 - The extension supports Selenium, Playwright, and Cucumber/Gherkin
 - Multi-language support: Java, TypeScript, JavaScript, Python
+- PII sanitization uses Compromise.js NLP + regex fallbacks

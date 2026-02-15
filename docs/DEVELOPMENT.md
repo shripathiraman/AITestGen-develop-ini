@@ -32,6 +32,10 @@ root/
 └── manifest.json        # Extension configuration
 ```
 
+> [!IMPORTANT]
+> **Script Loading Order in `sidepanel.html`:**
+> `log.js` must be loaded as a regular `<script>` **before** any `<script type="module">` tags. ES modules are deferred, so `Logger` must be globally available before `codegenerate.js` and `sidepanel.js` execute.
+
 ## detailed Component Overview
 
 ### Side Panel (`src/sidepanel/`)

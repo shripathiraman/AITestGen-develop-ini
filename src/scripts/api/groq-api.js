@@ -48,8 +48,16 @@ export default class GroqAPI {
       const rawContent = data.choices[0].message.content;
       const responseContent = this.extractBlock(rawContent);
 
+      // Extract usage data
+      const usage = data.usage ? {
+        input_tokens: data.usage.prompt_tokens,
+        output_tokens: data.usage.completion_tokens,
+        total_tokens: data.usage.total_tokens
+      } : null;
+
       return {
-        content: responseContent
+        content: responseContent,
+        usage: usage
       };
     } catch (error) {
       Logger.error('[Groq] Error calling Groq API:', error);

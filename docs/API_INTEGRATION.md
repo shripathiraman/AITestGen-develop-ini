@@ -25,7 +25,7 @@ export default class MyNewProviderAPI {
    * Sends a prompt to the LLM and returns the response.
    * @param {string} prompt - The prompt text.
    * @param {string} modelName - The specific model to use.
-   * @returns {Promise<{content: string}>} - The response content.
+   * @returns {Promise<{content: string, usage: {input_tokens: number, output_tokens: number}}>}
    */
   async sendMessage(prompt, modelName) {
     try {
@@ -49,7 +49,11 @@ export default class MyNewProviderAPI {
 
       const data = await response.json();
       return {
-        content: data.choices[0].message.content // Adjust based on API structure
+        content: data.choices[0].message.content, // Adjust based on API structure
+        usage: {
+          input_tokens: data.usage?.prompt_tokens || 0,
+          output_tokens: data.usage?.completion_tokens || 0
+        }
       };
       
     } catch (error) {
@@ -114,7 +118,8 @@ The extension loads dropdown options dynamically from `src/data/dropdown-data.js
 
 *Note: The `src/sidepanel/settings.js` script automatically fetches this file and populates the dropdowns.*
 
-## implementation Details
+## Implementation Details
 
 - **Logger:** Use the global `Logger` utility for debugging.
 - **Error Handling:** Ensure `sendMessage` throws meaningful errors so the UI can display them to the user.
+- **Usage Stats:** Always return a `usage` object with `input_tokens` and `output_tokens` from `sendMessage`. This powers the token usage & latency stats display in the UI.

@@ -18,6 +18,7 @@ The **AI Test Case Generator** is a powerful Chrome Extension designed to stream
     *   **Languages**: TypeScript, Java, JavaScript, Python.
     *   **Page Object Model (POM)**: Generates reusable page classes automatically.
 *   **⚡ Parallel Generation**: Generate Test Cases and Automation Scripts simultaneously to save time.
+*   **📊 Token Usage & Latency Stats**: Tracks input/output tokens and API latency across all generation calls.
 *   **📂 Multi-Page Support**: Capture elements across different pages for complex workflows.
 
 ---
@@ -58,6 +59,7 @@ The **AI Test Case Generator** is a powerful Chrome Extension designed to stream
     *   **Test Script**
 *   Use the **📋 Copy** button to copy to clipboard.
 *   Use the **📥 Download** button to save as a file.
+*   View **📊 Token Usage & Latency** stats at the top of the output section.
 
 ---
 
@@ -68,7 +70,7 @@ The **AI Test Case Generator** is a powerful Chrome Extension designed to stream
 | **Automation Tools** | Playwright, Selenium |
 | **Languages** | TypeScript, Java, JavaScript, Python |
 | **Test Types** | Manual, Gherkin (BDD), Functional Scripts |
-| **AI Models** | Llama3 (via Groq), GPT-4o (via OpenAI), specialized models |
+| **AI Models** | Llama3 (via Groq), GPT-4o (via OpenAI), Testleaf, specialized models |
 
 ---
 
