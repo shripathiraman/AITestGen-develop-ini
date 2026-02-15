@@ -30,7 +30,26 @@ export default class OpenAIAPI {
             if (!response.ok) {
                 const errorData = await response.text();
                 Logger.error('[OpenAI] API Response:', response.status, errorData);
-                throw new Error(`API call failed: ${response.status} - ${errorData}`);
+
+                let errorMessage = `API call failed: ${response.status}`;
+                try {
+                    const jsonError = JSON.parse(errorData);
+                    if (jsonError.error && jsonError.error.message) {
+                        errorMessage = jsonError.error.message;
+                    }
+                } catch (e) {
+                    // fall back
+                }
+
+                if (response.status === 401) {
+                    throw new Error(`Authentication Error: Invalid OpenAI API Key. Please check your settings.`);
+                } else if (response.status === 429) {
+                    throw new Error(`Rate Limit Exceeded: Check your OpenAI plan and quotas.`);
+                } else if (response.status >= 500) {
+                    throw new Error(`OpenAI Service Error: ${response.status}. The service might be currently unavailable.`);
+                }
+
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();

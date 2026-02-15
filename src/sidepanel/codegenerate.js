@@ -198,6 +198,11 @@ export class CodeGenerator {
       return;
     }
 
+    if (!navigator.onLine) {
+      alert("No Internet Connection. Please check your network settings.");
+      return;
+    }
+
     if (!settings.apiKey) {
       alert("API Key is mandatory. Please provide a valid API Key in Settings.");
       return;
@@ -339,7 +344,8 @@ export class CodeGenerator {
           this.parseAndDisplay(content, requirements, settings, 'test-case');
         } catch (e) {
           Logger.error("Manual/Gherkin Generation Failed:", e);
-          this.elements['area-test-case'].value = `Error generating test case: ${e.message}`;
+          const errorMsg = e.message || "Unknown error occurred";
+          this.elements['area-test-case'].value = `⚠️ Generation Failed:\n${errorMsg}`;
           this.elements['test-case-block'].style.display = 'block';
         }
       }
@@ -365,8 +371,10 @@ export class CodeGenerator {
         } catch (e) {
           Logger.error("Automation Generation Failed:", e);
           // Fallback error display in script block
-          this.elements['area-script'].value = `Error generating script: ${e.message}`;
+          const errorMsg = e.message || "Unknown error occurred";
+          this.elements['area-script'].value = `⚠️ Generation Failed:\n${errorMsg}`;
           this.elements['tab-script'].style.display = 'flex';
+          this.elements['script-block'].style.display = 'block'; // Ensure block is visible
         }
       }
 

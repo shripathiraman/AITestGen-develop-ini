@@ -30,7 +30,29 @@ export default class TestleafAPI {
             if (!response.ok) {
                 const errorData = await response.text();
                 Logger.error('API Response:', response.status, errorData);
-                throw new Error(`API call failed: ${response.status} - ${errorData}`);
+
+                let errorMessage = `API call failed: ${response.status}`;
+                try {
+                    const jsonError = JSON.parse(errorData);
+                    // Adjust based on Testleaf's actual error structure if known, assuming standard for now
+                    if (jsonError.error && jsonError.error.message) {
+                        errorMessage = jsonError.error.message;
+                    } else if (jsonError.message) {
+                        errorMessage = jsonError.message;
+                    }
+                } catch (e) {
+                    // fall back
+                }
+
+                if (response.status === 401) {
+                    throw new Error(`Authentication Error: Invalid Testleaf API Key. Please check your settings.`);
+                } else if (response.status === 429) {
+                    throw new Error(`Rate Limit Exceeded: You are sending requests too quickly.`);
+                } else if (response.status >= 500) {
+                    throw new Error(`Testleaf Service Error: ${response.status}. The service might be currently unavailable.`);
+                }
+
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();

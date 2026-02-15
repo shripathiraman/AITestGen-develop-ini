@@ -38,7 +38,27 @@ export default class GroqAPI {
       if (!response.ok) {
         const errorData = await response.text();
         Logger.error('[Groq] API Response:', response.status, errorData);
-        throw new Error(`API call failed: ${response.status} - ${errorData}`);
+
+        let errorMessage = `API call failed: ${response.status}`;
+        try {
+          const jsonError = JSON.parse(errorData);
+          if (jsonError.error && jsonError.error.message) {
+            errorMessage = jsonError.error.message;
+          }
+        } catch (e) {
+          // If response is not JSON, use the raw text or status
+        }
+
+        // Map common status codes to user-friendly messages
+        if (response.status === 401) {
+          throw new Error(`Authentication Error: Invalid API Key. Please check your settings.`);
+        } else if (response.status === 429) {
+          throw new Error(`Rate Limit Exceeded: You are sending requests too quickly. Please wait a moment.`);
+        } else if (response.status >= 500) {
+          throw new Error(`Groq Service Error: ${response.status}. The service might be currently unavailable.`);
+        }
+
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
