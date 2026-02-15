@@ -52,6 +52,12 @@ export class CodeGenerator {
     // Tool info labels (inside content panels)
     this.elements['pom-tool-info'] = document.getElementById('pom-tool-info');
     this.elements['script-tool-info'] = document.getElementById('script-tool-info');
+
+    // Progress indicator
+    this.elements['progress-container'] = document.getElementById('progress-container');
+    this.elements['progress-label'] = document.getElementById('progress-label');
+    this.elements['progress-timer'] = document.getElementById('progress-timer');
+    this.elements['progress-step'] = document.getElementById('progress-step');
   }
 
   async initialize() {
@@ -135,6 +141,35 @@ export class CodeGenerator {
     }
   }
 
+  // --- Progress Indicator Methods ---
+
+  startProgress() {
+    this.progressStartTime = Date.now();
+    this.elements['progress-container'].style.display = 'block';
+    this.elements['progress-timer'].textContent = '0:00';
+    this.elements['progress-label'].textContent = '⏳ Generating...';
+    this.elements['progress-step'].textContent = 'Preparing...';
+
+    this.progressInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - this.progressStartTime) / 1000);
+      const mins = Math.floor(elapsed / 60);
+      const secs = elapsed % 60;
+      this.elements['progress-timer'].textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    }, 1000);
+  }
+
+  updateProgressStep(step, total, message) {
+    this.elements['progress-step'].textContent = `Step ${step} of ${total} · ${message}`;
+  }
+
+  stopProgress() {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+      this.progressInterval = null;
+    }
+    this.elements['progress-container'].style.display = 'none';
+  }
+
   updateSelectedElements(elements) {
     this.currentElements = elements;
     this.log("CodeGenerator updated with new elements:", this.currentElements);
@@ -181,6 +216,15 @@ export class CodeGenerator {
     this.elements['stop-btn'].disabled = true;
     this.elements['reset-btn'].disabled = true;
     this.elements['generate-btn'].disabled = true;
+
+    // Start progress indicator
+    this.startProgress();
+
+    // Calculate total steps
+    const hasManual = settings.outputFormat === 'manual' || settings.outputFormat === 'feature';
+    const hasAutomation = settings.testPage === true || settings.testScript === true;
+    const totalSteps = (hasManual ? 1 : 0) + (hasAutomation ? 1 : 0);
+    let currentStep = 0;
 
     // 1. Reset UI and Clear Old Content
     this.elements['test-case-block'].style.display = 'none';
@@ -277,6 +321,8 @@ export class CodeGenerator {
 
       // --- Call 1: Manual / Gherkin ---
       if (requirements.manual || requirements.feature) {
+        currentStep++;
+        this.updateProgressStep(currentStep, totalSteps, 'Generating test cases...');
         this.log("Generating Manual/Gherkin...");
         const manualPrompt = getManualGherkinPrompt(promptPayload);
         this.log(`Sending Manual/Gherkin request to ${settings.llmProvider}...`);
@@ -300,6 +346,8 @@ export class CodeGenerator {
 
       // --- Call 2: Automation (POM / Script) ---
       if (requirements.pom || requirements.script) {
+        currentStep++;
+        this.updateProgressStep(currentStep, totalSteps, 'Generating automation scripts...');
         this.log("Generating Automation Script...");
         const automationPrompt = getAutomationPrompt(promptPayload);
         this.log(`Sending Automation request to ${settings.llmProvider}...`);
@@ -333,6 +381,9 @@ export class CodeGenerator {
       Logger.error("Error during generation:", error);
       alert(`Error: ${error.message}`);
     } finally {
+      // Stop progress indicator
+      this.stopProgress();
+
       // ALWAYS render stats - even if an error occurred during generation
       Logger.log('[STATS] Finally block reached. generationStats:', this.generationStats);
       this.renderStats();

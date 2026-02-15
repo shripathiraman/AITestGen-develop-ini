@@ -31,6 +31,7 @@ class SettingsManager {
     // Cache dual-option elements separately as they are a collection
     this.elements.dualOptions = document.querySelectorAll('.dual-option');
     this.elements.switchInputs = document.querySelectorAll('.switch input');
+    this.elements.themeOptions = document.querySelectorAll('.theme-option');
   }
 
   async fetchDropdownData() {
@@ -69,6 +70,21 @@ class SettingsManager {
 
     // Add immediate feedback for API key input
     this.elements['api-key'].addEventListener('input', this.handleApiKeyInputValidation.bind(this));
+
+    // Theme toggle — apply immediately on click
+    this.elements.themeOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        this.elements.themeOptions.forEach(o => o.classList.remove('active'));
+        option.classList.add('active');
+        this.applyTheme(option.dataset.value);
+        chrome.storage.local.set({ theme: option.dataset.value });
+      });
+    });
+  }
+
+  applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    this.log(`Theme applied: ${theme}`);
   }
 
   populateDropdown(dropdownElement, items, defaultValue = null) {
@@ -156,7 +172,8 @@ class SettingsManager {
       featureTest: false, // This was in the storage keys but not used in UI, maintaining for consistency
       testPage: false,
       testScript: false,
-      sanitizePii: true
+      sanitizePii: true,
+      theme: 'system'
     };
 
     const settings = await chrome.storage.local.get(defaultSettings);
@@ -191,6 +208,15 @@ class SettingsManager {
     this.elements['test-page'].checked = settings.testPage;
     this.elements['test-script'].checked = settings.testScript;
     this.elements['sanitize-pii'].checked = settings.sanitizePii;
+
+    // Set theme toggle
+    this.applyTheme(settings.theme || 'system');
+    this.elements.themeOptions.forEach(option => {
+      option.classList.remove('active');
+      if (option.dataset.value === (settings.theme || 'system')) {
+        option.classList.add('active');
+      }
+    });
 
     this.log("Settings loaded and applied to UI.");
   }
@@ -257,7 +283,8 @@ class SettingsManager {
       multiPage: this.elements['multi-page'].checked,
       testPage: this.elements['test-page'].checked,
       testScript: this.elements['test-script'].checked,
-      sanitizePii: this.elements['sanitize-pii'].checked
+      sanitizePii: this.elements['sanitize-pii'].checked,
+      theme: document.querySelector('.theme-option.active')?.dataset.value || 'system'
     };
 
     await chrome.storage.local.set(settings);
@@ -286,3 +313,10 @@ document.addEventListener('DOMContentLoaded', () => {
     new SettingsManager();
   }
 });
+
+// Apply saved theme immediately (before DOMContentLoaded) to prevent FOUC
+(function () {
+  chrome.storage.local.get({ theme: 'system' }, (result) => {
+    document.documentElement.setAttribute('data-theme', result.theme || 'system');
+  });
+})();

@@ -66,6 +66,18 @@
         placeholder="Add more context to help the AI generate better test cases..."></textarea>
     </div>
 
+    <!-- Progress Indicator -->
+    <div id="progress-container" class="section progress-section" style="display:none;">
+      <div class="progress-header">
+        <span id="progress-label">⏳ Generating...</span>
+        <span id="progress-timer">0:00</span>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-bar"></div>
+      </div>
+      <div id="progress-step" class="progress-step">Preparing...</div>
+    </div>
+
     <div class="section output-section" style="display:none;">
       <!-- Stats Display -->
       <div id="stats-display" class="stats-container" style="display:none;"></div>
@@ -122,6 +134,18 @@
 
   <div id="settings" class="tab-content">
     <div class="section">
+
+      <div class="toggle-container">
+        <div class="toggle-header">
+          <div class="toggle-title">🎨 Theme</div>
+          <div class="toggle-description">Choose light, dark, or follow system preference</div>
+        </div>
+        <div class="theme-toggle">
+          <div class="theme-option active" data-value="system">🖥️ System</div>
+          <div class="theme-option" data-value="light">☀️ Light</div>
+          <div class="theme-option" data-value="dark">🌙 Dark</div>
+        </div>
+      </div>
 
       <div class="form-group">
         <label>

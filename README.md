@@ -19,6 +19,10 @@ The **AI Test Case Generator** is a powerful Chrome Extension designed to stream
     *   **Page Object Model (POM)**: Generates reusable page classes automatically.
 *   **⚡ Parallel Generation**: Generate Test Cases and Automation Scripts simultaneously to save time.
 *   **📊 Token Usage & Latency Stats**: Tracks input/output tokens and API latency across all generation calls.
+*   **🎨 Theme Support**:
+    *   **Light/Dark Mode**: Custom themes for comfortable viewing in any environment.
+    *   **System Preference**: Automatically adapts to your OS settings.
+*   **⏳ Real-time Progress**: Visual indicator with elapsed time and step tracking during generation.
 *   **📂 Multi-Page Support**: Capture elements across different pages for complex workflows.
 
 ---
@@ -35,6 +39,7 @@ The **AI Test Case Generator** is a powerful Chrome Extension designed to stream
 1.  Open the extension side panel (Click the extension icon).
 2.  Go to the **Settings** tab (⚙️ icon).
 3.  **Configure your preferences**:
+    *   **Theme**: Choose between System, Light, or Dark mode.
     *   **Automation Tool**: Playwright / Selenium.
     *   **Language**: TypeScript, Java, etc.
     *   **LLM Provider**: Select Groq, OpenAI, etc.
