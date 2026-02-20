@@ -24,6 +24,7 @@ The **AI Test Case Generator** is a powerful Chrome Extension designed to stream
     *   **System Preference**: Automatically adapts to your OS settings.
 *   **⏳ Real-time Progress**: Visual indicator with elapsed time and step tracking during generation.
 *   **📂 Multi-Page Support**: Capture elements across different pages for complex workflows.
+*   **🌐 Multi-Language Support (i18n)**: UI dynamically translates between English and French based on browser locale.
 
 ---
 

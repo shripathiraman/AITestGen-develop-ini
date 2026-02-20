@@ -7,7 +7,9 @@ Extension: AI Test Case Generator v1.1.0
 These files are referenced in manifest.json or imported by active scripts.
 
 1. Core Extension Files
-   - manifest.json (Main extension configuration)
+   - manifest.json (Main extension configuration, sets default locale)
+   - _locales/en/messages.json (English localization dictionary)
+   - _locales/fr/messages.json (French localization dictionary)
    - src/background/background.js (Service worker)
    - src/content_scripts/content.js (DOM inspection & element selection)
    - src/content_scripts/inspect.css (Inspector UI styling)
@@ -16,8 +18,8 @@ These files are referenced in manifest.json or imported by active scripts.
 2. Side Panel UI
    - src/sidepanel/sidepanel.html (Main UI entry point)
    - src/sidepanel/sidepanel.css (Side panel styling incl. stats display, sticky tabs)
-   - src/sidepanel/sidepanel.js (UI controller & navigation)
-   - src/sidepanel/codegenerate.js (Code generation logic, LLM orchestration & stats tracking)
+   - src/sidepanel/sidepanel.js (UI controller, navigation, & i18n initialization)
+   - src/sidepanel/codegenerate.js (Code generation logic, API Error modal, & stats tracking)
    - src/sidepanel/settings.js (Settings management)
 
 3. Prompt System

@@ -2,6 +2,11 @@ AITestGen-develop-ini/
 ├── .gitignore
 ├── .vscode/
 │   └── settings.json
+├── _locales/
+│   ├── en/
+│   │   └── messages.json
+│   └── fr/
+│       └── messages.json
 ├── docs/
 │   ├── API_INTEGRATION.md
 │   ├── COMPLIANCE_AUDIT.md

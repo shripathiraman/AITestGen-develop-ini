@@ -20,6 +20,7 @@ This guide covers the local setup, development workflow, and debugging technique
 
 ```
 root/
+├── _locales/            # i18n language files (en, fr)
 ├── src/
 │   ├── background/      # Service worker (background processes)
 │   ├── content_scripts/ # Scripts injected into web pages (DOM inspection)
