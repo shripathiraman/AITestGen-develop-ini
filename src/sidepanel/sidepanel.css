@@ -790,3 +790,72 @@ input:checked + .slider:before {
     --color-track-bg: #334155;
   }
 }
+
+/* API Error Modal Overlay */
+.error-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.error-modal-content {
+  background-color: var(--color-white);
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.error-modal-header {
+  padding: 15px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.error-modal-header h3 {
+  color: var(--color-error);
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.error-modal-body {
+  padding: 20px;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  word-wrap: break-word;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.error-modal-footer {
+  padding: 15px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+#api-error-modal-ok-btn {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+#api-error-modal-ok-btn:hover {
+  background-color: var(--color-primary-hover);
+}

@@ -58,6 +58,11 @@ export class CodeGenerator {
     this.elements['progress-label'] = document.getElementById('progress-label');
     this.elements['progress-timer'] = document.getElementById('progress-timer');
     this.elements['progress-step'] = document.getElementById('progress-step');
+
+    // API Error Modal
+    this.elements['api-error-modal'] = document.getElementById('api-error-modal');
+    this.elements['api-error-modal-message'] = document.getElementById('api-error-modal-message');
+    this.elements['api-error-modal-ok-btn'] = document.getElementById('api-error-modal-ok-btn');
   }
 
   async initialize() {
@@ -85,6 +90,27 @@ export class CodeGenerator {
         this.handleDownloadClick(e.target.closest('.download-btn-dynamic'));
       }
     });
+
+    if (this.elements['api-error-modal-ok-btn']) {
+      this.elements['api-error-modal-ok-btn'].addEventListener('click', () => {
+        if (this.elements['api-error-modal']) {
+          this.elements['api-error-modal'].style.display = 'none';
+        }
+        if (this.elements['api-error-modal-message']) {
+          this.elements['api-error-modal-message'].textContent = '';
+        }
+      });
+    }
+  }
+
+  showApiError(message) {
+    if (this.elements['api-error-modal'] && this.elements['api-error-modal-message']) {
+      const currentMsg = this.elements['api-error-modal-message'].textContent;
+      this.elements['api-error-modal-message'].textContent = currentMsg ? currentMsg + '\n\n' + message : message;
+      this.elements['api-error-modal'].style.display = 'flex';
+    } else {
+      alert(message);
+    }
   }
 
   /**
@@ -242,6 +268,10 @@ export class CodeGenerator {
     this.elements['preview-pom'].innerHTML = '';
     this.elements['preview-script'].innerHTML = '';
 
+    if (this.elements['api-error-modal-message']) {
+      this.elements['api-error-modal-message'].textContent = '';
+    }
+
     // Reset Stats
     this.generationStats = { input: 0, output: 0, latency: 0 };
 
@@ -345,8 +375,7 @@ export class CodeGenerator {
         } catch (e) {
           Logger.error("Manual/Gherkin Generation Failed:", e);
           const errorMsg = e.message || "Unknown error occurred";
-          this.elements['area-test-case'].value = `⚠️ Generation Failed:\n${errorMsg}`;
-          this.elements['test-case-block'].style.display = 'block';
+          this.showApiError(`Manual/Gherkin Generation Failed:\n${errorMsg}`);
         }
       }
 
@@ -370,11 +399,8 @@ export class CodeGenerator {
           this.parseAndDisplay(content, requirements, settings, 'script');
         } catch (e) {
           Logger.error("Automation Generation Failed:", e);
-          // Fallback error display in script block
           const errorMsg = e.message || "Unknown error occurred";
-          this.elements['area-script'].value = `⚠️ Generation Failed:\n${errorMsg}`;
-          this.elements['tab-script'].style.display = 'flex';
-          this.elements['script-block'].style.display = 'block'; // Ensure block is visible
+          this.showApiError(`Automation Generation Failed:\n${errorMsg}`);
         }
       }
 
