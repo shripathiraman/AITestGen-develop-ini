@@ -256,7 +256,7 @@ class SettingsManager {
       apiKeyInput.parentNode.insertBefore(errorMessage, apiKeyInput.nextSibling);
       this.elements['api-key-error'] = errorMessage; // Cache the new element
     }
-    errorMessage.textContent = 'API Key is mandatory. Please provide a valid API Key.';
+    errorMessage.textContent = chrome.i18n.getMessage("errorApiKeyMandatory") || 'API Key is mandatory. Please provide a valid API Key.';
     apiKeyInput.focus();
   }
 
@@ -297,7 +297,7 @@ class SettingsManager {
     const originalText = saveBtn.textContent;
     const originalBg = saveBtn.style.backgroundColor;
 
-    saveBtn.textContent = 'Settings Saved!';
+    saveBtn.textContent = chrome.i18n.getMessage("textSaved") || 'Settings Saved!';
     saveBtn.style.backgroundColor = 'var(--color-success)';
 
     setTimeout(() => {

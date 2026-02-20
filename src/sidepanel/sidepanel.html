@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test Case Generator</title>
+  <title data-i18n="extensionName">Test Case Generator</title>
   <link rel="stylesheet" href="sidepanel.css">
   <link rel="stylesheet" href="../../lib/prism/prism-okaidia.css">
   <script src="../../lib/marked/marked.min.js"></script>
@@ -16,10 +16,10 @@
 <body>
   <div class="tabs">
     <button id="generator-tab" class="active">
-      <span class="tab-icon">📋</span> Case Carft AI
+      <span class="tab-icon">📋</span> <span data-i18n="tabGenerator">Case Craft AI</span>
     </button>
     <button id="settings-tab">
-      <span class="tab-icon">⚙️</span> Settings
+      <span class="tab-icon">⚙️</span> <span data-i18n="tabSettings">Settings</span>
     </button>
   </div>
 
@@ -28,23 +28,23 @@
     <div class="section">
       <div class="section-title">
         <span class="section-icon">🔍</span>
-        <h5>Inspect Elements</h5>
+        <h5 data-i18n="sectionInspect">Inspect Elements</h5>
       </div>
       <div class="button-group">
         <button id="inspect-btn">
-          <span class="tab-icon">🔍</span> Inspect
+          <span class="tab-icon">🔍</span> <span data-i18n="btnInspect">Inspect</span>
         </button>
         <button id="stop-btn" disabled>
-          <span class="tab-icon">⏹️</span> Stop
+          <span class="tab-icon">⏹️</span> <span data-i18n="btnStop">Stop</span>
         </button>
         <button id="reset-btn">
-          <span class="tab-icon">🔄</span> Reset
+          <span class="tab-icon">🔄</span> <span data-i18n="btnReset">Reset</span>
         </button>
         <button id="generate-btn">
-          <span class="tab-icon">✨</span> Generate
+          <span class="tab-icon">✨</span> <span data-i18n="btnGenerate">Generate</span>
         </button>
       </div>
-      <div class="warning-banner">
+      <div class="warning-banner" data-i18n="warningPrivacy">
         ⚠️ <b>Privacy Warning:</b> Do not inspect pages containing sensitive PII or secrets.
       </div>
     </div>
@@ -52,7 +52,8 @@
     <div class="section">
       <div class="section-title">
         <span class="section-icon">📍</span>
-        <h5>Elements Selected <span id="element-count">0</span></h5>
+        <h5 data-i18n="sectionSelected">Elements Selected</h5>
+        <h5><span id="element-count">0</span></h5>
       </div>
       <div id="selected-elements" class="element-list"></div>
     </div>
@@ -60,22 +61,22 @@
     <div class="section">
       <div class="section-title">
         <span class="section-icon">📝</span>
-        <h5>Additional Context (Optional)</h5>
+        <h5 data-i18n="sectionContext">Additional Context (Optional)</h5>
       </div>
-      <textarea id="context-input"
+      <textarea id="context-input" data-i18n-placeholder="placeholderContext"
         placeholder="Add more context to help the AI generate better test cases..."></textarea>
     </div>
 
     <!-- Progress Indicator -->
     <div id="progress-container" class="section progress-section" style="display:none;">
       <div class="progress-header">
-        <span id="progress-label">⏳ Generating...</span>
+        <span id="progress-label" data-i18n="progressLabel">⏳ Generating...</span>
         <span id="progress-timer">0:00</span>
       </div>
       <div class="progress-bar-track">
         <div class="progress-bar-fill" id="progress-bar"></div>
       </div>
-      <div id="progress-step" class="progress-step">Preparing...</div>
+      <div id="progress-step" class="progress-step" data-i18n="progressStepPreparing">Preparing...</div>
     </div>
 
     <div class="section output-section" style="display:none;">
@@ -85,13 +86,13 @@
       <!-- Output Tabs Bar -->
       <div class="output-tabs" id="output-tabs">
         <button class="output-tab" id="tab-test-case" data-target="test-case-output" style="display:none;">
-          <span class="tab-icon">📝</span> <span id="tc-tab-label">Test Case</span>
+          <span class="tab-icon">📝</span> <span id="tc-tab-label" data-i18n="tabTestCase">Test Case</span>
         </button>
         <button class="output-tab" id="tab-pom" data-target="pom-output" style="display:none;">
-          <span class="tab-icon">🏗️</span> <span id="pom-tab-label">POM</span>
+          <span class="tab-icon">🏗️</span> <span id="pom-tab-label" data-i18n="tabPom">POM</span>
         </button>
         <button class="output-tab" id="tab-script" data-target="script-output" style="display:none;">
-          <span class="tab-icon">💻</span> <span id="script-tab-label">Test Script</span>
+          <span class="tab-icon">💻</span> <span id="script-tab-label" data-i18n="tabTestScript">Test Script</span>
         </button>
       </div>
 
@@ -137,20 +138,20 @@
 
       <div class="toggle-container">
         <div class="toggle-header">
-          <div class="toggle-title">🎨 Theme</div>
-          <div class="toggle-description">Choose light, dark, or follow system preference</div>
+          <div class="toggle-title" data-i18n="themeTitle">🎨 Theme</div>
+          <div class="toggle-description" data-i18n="themeDesc">Choose light, dark, or follow system preference</div>
         </div>
         <div class="theme-toggle">
-          <div class="theme-option active" data-value="system">🖥️ System</div>
-          <div class="theme-option" data-value="light">☀️ Light</div>
-          <div class="theme-option" data-value="dark">🌙 Dark</div>
+          <div class="theme-option active" data-value="system" data-i18n="themeSystem">🖥️ System</div>
+          <div class="theme-option" data-value="light" data-i18n="themeLight">☀️ Light</div>
+          <div class="theme-option" data-value="dark" data-i18n="themeDark">🌙 Dark</div>
         </div>
       </div>
 
       <div class="form-group">
         <label>
           <span class="icon">🛠️</span>
-          Automation Tool
+          <span data-i18n="labelTool">Automation Tool</span>
         </label>
         <select id="automation-tool">
         </select>
@@ -159,7 +160,7 @@
       <div class="form-group">
         <label>
           <span class="icon">🌐</span>
-          Programming Language
+          <span data-i18n="labelLang">Programming Language</span>
         </label>
         <select id="language">
         </select>
@@ -168,7 +169,7 @@
       <div class="form-group">
         <label>
           <span class="icon">🤖</span>
-          LLM Provider
+          <span data-i18n="labelProvider">LLM Provider</span>
         </label>
         <select id="llm-provider">
         </select>
@@ -177,7 +178,7 @@
       <div class="form-group">
         <label>
           <span class="icon">🧠</span>
-          LLM Model
+          <span data-i18n="labelModel">LLM Model</span>
         </label>
         <select id="llm-model">
         </select>
@@ -186,30 +187,30 @@
       <div class="form-group">
         <label>
           <span class="icon">🔑</span>
-          API Key
+          <span data-i18n="labelApiKey">API Key</span>
         </label>
-        <input type="password" id="api-key" placeholder="Enter your API key">
+        <input type="password" id="api-key" data-i18n-placeholder="placeholderApiKey" placeholder="Enter your API key">
       </div>
 
       <div class="section ai-output">
-        <div class="section-title ai-output-title">
+        <div class="section-title ai-output-title" data-i18n="sectionAiOutputs">
           AI Output's
         </div>
 
         <div class="toggle-container">
           <div class="toggle-header">
-            <div class="toggle-title">Test Case Output</div>
-            <div class="toggle-description">Choose between manual tests or feature files</div>
+            <div class="toggle-title" data-i18n="tcOutputTitle">Test Case Output</div>
+            <div class="toggle-description" data-i18n="tcOutputDesc">Choose between manual tests or feature files</div>
           </div>
           <div class="dual-toggle">
-            <div class="dual-option active" data-value="manual">Manual Test</div>
-            <div class="dual-option" data-value="feature">Feature File</div>
+            <div class="dual-option active" data-value="manual" data-i18n="optionManualTest">Manual Test</div>
+            <div class="dual-option" data-value="feature" data-i18n="optionFeatureFile">Feature File</div>
           </div>
         </div>
 
         <div class="switch-toggle">
           <div class="switch-label">
-            <div class="toggle-title">Page Object Model</div>
+            <div class="toggle-title" data-i18n="optionPom">Page Object Model</div>
           </div>
           <label class="switch">
             <input type="checkbox" id="test-page">
@@ -219,7 +220,7 @@
 
         <div class="switch-toggle">
           <div class="switch-label">
-            <div class="toggle-title">Test Script</div>
+            <div class="toggle-title" data-i18n="optionTestScript">Test Script</div>
           </div>
           <label class="switch">
             <input type="checkbox" id="test-script">
@@ -230,8 +231,8 @@
 
       <div class="switch-toggle cool-grey-background">
         <div class="switch-label">
-          <div class="toggle-title">Enable Multi-Page Selection</div>
-          <div class="toggle-description">Capture elements across multiple pages</div>
+          <div class="toggle-title" data-i18n="multiPageTitle">Enable Multi-Page Selection</div>
+          <div class="toggle-description" data-i18n="multiPageDesc">Capture elements across multiple pages</div>
         </div>
         <label class="switch">
           <input type="checkbox" id="multi-page" checked>
@@ -241,8 +242,9 @@
 
       <div class="switch-toggle cool-grey-background">
         <div class="switch-label">
-          <div class="toggle-title">Sanitize PII</div>
-          <div class="toggle-description">Auto-mask sensitive data (e.g. emails, passwords)</div>
+          <div class="toggle-title" data-i18n="sanitizeTitle">Sanitize PII</div>
+          <div class="toggle-description" data-i18n="sanitizeDesc">Auto-mask sensitive data (e.g. emails, passwords)
+          </div>
         </div>
         <label class="switch">
           <input type="checkbox" id="sanitize-pii" checked>
@@ -251,7 +253,7 @@
       </div>
 
       <button id="save-settings">
-        <span class="tab-icon">💾</span> Save Settings
+        <span class="tab-icon">💾</span> <span data-i18n="btnSaveSettings">Save Settings</span>
       </button>
     </div>
   </div>
@@ -261,7 +263,7 @@
     <div class="error-modal-content">
       <div class="error-modal-header">
         <span class="error-icon">⚠️</span>
-        <h3 id="api-error-modal-title">API Error</h3>
+        <h3 id="api-error-modal-title" data-i18n="errorApiTitle">API Error</h3>
       </div>
       <div class="error-modal-body">
         <p id="api-error-modal-message" style="white-space: pre-wrap;"></p>

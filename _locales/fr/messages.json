@@ -1,0 +1,170 @@
+{
+    "extensionName": {
+        "message": "Extension Navigateur Case Craft AI"
+    },
+    "extensionDescription": {
+        "message": "Génère des cas de test IA nativement depuis le navigateur."
+    },
+    "tabGenerator": {
+        "message": "Case Craft IA"
+    },
+    "tabSettings": {
+        "message": "Paramètres"
+    },
+    "sectionInspect": {
+        "message": "Inspecter les éléments"
+    },
+    "btnInspect": {
+        "message": "Inspecter"
+    },
+    "btnStop": {
+        "message": "Arrêter"
+    },
+    "btnReset": {
+        "message": "Réinitialiser"
+    },
+    "btnGenerate": {
+        "message": "Générer"
+    },
+    "warningPrivacy": {
+        "message": "⚠️ Avertissement de confidentialité : N'inspectez pas les pages contenant des données sensibles ou secrètes."
+    },
+    "sectionSelected": {
+        "message": "Éléments sélectionnés"
+    },
+    "sectionContext": {
+        "message": "Contexte supplémentaire (Facultatif)"
+    },
+    "placeholderContext": {
+        "message": "Ajoutez plus de contexte pour aider l'IA à mieux générer les cas de test..."
+    },
+    "progressLabel": {
+        "message": "Génération en cours..."
+    },
+    "progressStepPreparing": {
+        "message": "Préparation..."
+    },
+    "tabTestCase": {
+        "message": "Cas de Test"
+    },
+    "tabFeatureFile": {
+        "message": "Fichier Feature"
+    },
+    "tabPom": {
+        "message": "POM"
+    },
+    "tabTestScript": {
+        "message": "Script de Test"
+    },
+    "btnCopy": {
+        "message": "Copier"
+    },
+    "btnDownload": {
+        "message": "Télécharger"
+    },
+    "copiedText": {
+        "message": "Copié !"
+    },
+    "themeTitle": {
+        "message": "Thème"
+    },
+    "themeDesc": {
+        "message": "Choisissez clair, sombre, ou selon le système"
+    },
+    "themeSystem": {
+        "message": "🖥️ Système"
+    },
+    "themeLight": {
+        "message": "☀️ Clair"
+    },
+    "themeDark": {
+        "message": "🌙 Sombre"
+    },
+    "labelTool": {
+        "message": "Outil d'automatisation"
+    },
+    "labelLang": {
+        "message": "Langage de programmation"
+    },
+    "labelProvider": {
+        "message": "Fournisseur IA"
+    },
+    "labelModel": {
+        "message": "Modèle IA"
+    },
+    "labelApiKey": {
+        "message": "Clé API"
+    },
+    "placeholderApiKey": {
+        "message": "Entrez votre clé API"
+    },
+    "sectionAiOutputs": {
+        "message": "Sorties de l'IA"
+    },
+    "tcOutputTitle": {
+        "message": "Sortie Cas de Test"
+    },
+    "tcOutputDesc": {
+        "message": "Choisissez entre des tests manuels ou des fichiers feature"
+    },
+    "optionManualTest": {
+        "message": "✍️ Test Manuel"
+    },
+    "optionFeatureFile": {
+        "message": "🧩 Fichier Feature"
+    },
+    "optionPom": {
+        "message": "Page Object Model"
+    },
+    "optionTestScript": {
+        "message": "Script de Test"
+    },
+    "multiPageTitle": {
+        "message": "Activer la sélection multi-pages"
+    },
+    "multiPageDesc": {
+        "message": "Capturer des éléments sur plusieurs pages"
+    },
+    "sanitizeTitle": {
+        "message": "Désinfecter les PII"
+    },
+    "sanitizeDesc": {
+        "message": "Masquer automatiquement les données sensibles"
+    },
+    "btnSaveSettings": {
+        "message": "Sauvegarder"
+    },
+    "errorSelectElement": {
+        "message": "Veuillez sélectionner au moins un élément pour générer un cas de test."
+    },
+    "errorNoInternet": {
+        "message": "Pas de connexion Internet. Veuillez vérifier vos paramètres réseau."
+    },
+    "errorApiKeyMandatory": {
+        "message": "La clé API est obligatoire. Veuillez fournir une clé API valide dans les paramètres."
+    },
+    "piiWarningConfirm": {
+        "message": "Les PII n'ont pas été vérifiés, ce qui signifie qu'il est fort possible d'envoyer des informations sensibles à l'IA.\n\nVoulez-vous continuer ?"
+    },
+    "progressStepBuilding": {
+        "message": "Génération des cas de tests..."
+    },
+    "progressStepAutomation": {
+        "message": "Génération des scripts d'automatisation..."
+    },
+    "errorApiTitle": {
+        "message": "Erreur API"
+    },
+    "alertCannotInspect": {
+        "message": "Impossible d'utiliser l'inspecteur sur les pages internes de Chrome ou de l'extension."
+    },
+    "alertFailedStart": {
+        "message": "Échec du démarrage de l'inspecteur. Veuillez actualiser la page et réessayer."
+    },
+    "alertConfirmReset": {
+        "message": "Êtes-vous sûr de vouloir tout réinitialiser ? Cela effacera tous les éléments sélectionnés."
+    },
+    "textSaved": {
+        "message": "Sauvegardé !"
+    }
+}

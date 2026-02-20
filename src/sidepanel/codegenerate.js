@@ -220,17 +220,17 @@ export class CodeGenerator {
     this.log("DEBUG: Retrieved settings from storage:", settings);
 
     if (this.currentElements.length === 0) {
-      alert("Please select at least one element to generate a test case.");
+      alert(chrome.i18n.getMessage("errorSelectElement") || "Please select at least one element to generate a test case.");
       return;
     }
 
     if (!navigator.onLine) {
-      alert("No Internet Connection. Please check your network settings.");
+      alert(chrome.i18n.getMessage("errorNoInternet") || "No Internet Connection. Please check your network settings.");
       return;
     }
 
     if (!settings.apiKey) {
-      alert("API Key is mandatory. Please provide a valid API Key in Settings.");
+      alert(chrome.i18n.getMessage("errorApiKeyMandatory") || "API Key is mandatory. Please provide a valid API Key in Settings.");
       return;
     }
 
@@ -309,7 +309,7 @@ export class CodeGenerator {
 
       if (settings.sanitizePii === false) {
         // PII is NOT sanitized -> Warn User
-        const userConfirmed = confirm("PII has not been checked, which means we have a high possibility of sending sensitive info to AI.\n\nDo you want to continue?");
+        const userConfirmed = confirm(chrome.i18n.getMessage("piiWarningConfirm") || "PII has not been checked, which means we have a high possibility of sending sensitive info to AI.\n\nDo you want to continue?");
 
         if (!userConfirmed) {
           this.log("Generation cancelled by user due to PII warning.");
@@ -357,7 +357,7 @@ export class CodeGenerator {
       // --- Call 1: Manual / Gherkin ---
       if (requirements.manual || requirements.feature) {
         currentStep++;
-        this.updateProgressStep(currentStep, totalSteps, 'Generating test cases...');
+        this.updateProgressStep(currentStep, totalSteps, chrome.i18n.getMessage("progressStepBuilding") || 'Generating test cases...');
         this.log("Generating Manual/Gherkin...");
         const manualPrompt = getManualGherkinPrompt(promptPayload);
         this.log(`Sending Manual/Gherkin request to ${settings.llmProvider}...`);
@@ -382,7 +382,7 @@ export class CodeGenerator {
       // --- Call 2: Automation (POM / Script) ---
       if (requirements.pom || requirements.script) {
         currentStep++;
-        this.updateProgressStep(currentStep, totalSteps, 'Generating automation scripts...');
+        this.updateProgressStep(currentStep, totalSteps, chrome.i18n.getMessage("progressStepAutomation") || 'Generating automation scripts...');
         this.log("Generating Automation Script...");
         const automationPrompt = getAutomationPrompt(promptPayload);
         this.log(`Sending Automation request to ${settings.llmProvider}...`);

@@ -3,25 +3,46 @@
   "name": "AI Test Case Generator",
   "version": "1.1.0",
   "description": "Inspect & Capture-Based Test Case Generator",
+  "default_locale": "en",
   "icons": {
     "48": "icons/icon48.png"
   },
   "web_accessible_resources": [
     {
-      "resources": ["src/data/dropdown-data.json"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "src/data/dropdown-data.json"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
-  "permissions": ["storage", "scripting", "sidePanel", "activeTab", "webNavigation", "tabs"],
-  "host_permissions": ["<all_urls>"],
+  "permissions": [
+    "storage",
+    "scripting",
+    "sidePanel",
+    "activeTab",
+    "webNavigation",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "src/background/background.js"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["src/scripts/log.js", "src/content_scripts/content.js"],
-      "css": ["src/content_scripts/inspect.css"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/scripts/log.js",
+        "src/content_scripts/content.js"
+      ],
+      "css": [
+        "src/content_scripts/inspect.css"
+      ],
       "run_at": "document_idle"
     }
   ],

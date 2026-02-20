@@ -1,0 +1,172 @@
+{
+  "extensionName": {
+    "message": "Case Craft AI Browser Extension",
+    "description": "Name of the extension"
+  },
+  "extensionDescription": {
+    "message": "Generates AI test cases natively from the browser.",
+    "description": "Description of the extension"
+  },
+  "tabGenerator": {
+    "message": "Case Craft AI"
+  },
+  "tabSettings": {
+    "message": "Settings"
+  },
+  "sectionInspect": {
+    "message": "Inspect Elements"
+  },
+  "btnInspect": {
+    "message": "Inspect"
+  },
+  "btnStop": {
+    "message": "Stop"
+  },
+  "btnReset": {
+    "message": "Reset"
+  },
+  "btnGenerate": {
+    "message": "Generate"
+  },
+  "warningPrivacy": {
+    "message": "⚠️ Privacy Warning: Do not inspect pages containing sensitive PII or secrets."
+  },
+  "sectionSelected": {
+    "message": "Elements Selected"
+  },
+  "sectionContext": {
+    "message": "Additional Context (Optional)"
+  },
+  "placeholderContext": {
+    "message": "Add more context to help the AI generate better test cases..."
+  },
+  "progressLabel": {
+    "message": "Generating..."
+  },
+  "progressStepPreparing": {
+    "message": "Preparing..."
+  },
+  "tabTestCase": {
+    "message": "Test Case"
+  },
+  "tabFeatureFile": {
+    "message": "Feature File"
+  },
+  "tabPom": {
+    "message": "POM"
+  },
+  "tabTestScript": {
+    "message": "Test Script"
+  },
+  "btnCopy": {
+    "message": "Copy"
+  },
+  "btnDownload": {
+    "message": "Download"
+  },
+  "copiedText": {
+    "message": "Copied!"
+  },
+  "themeTitle": {
+    "message": "Theme"
+  },
+  "themeDesc": {
+    "message": "Choose light, dark, or follow system preference"
+  },
+  "themeSystem": {
+    "message": "🖥️ System"
+  },
+  "themeLight": {
+    "message": "☀️ Light"
+  },
+  "themeDark": {
+    "message": "🌙 Dark"
+  },
+  "labelTool": {
+    "message": "Automation Tool"
+  },
+  "labelLang": {
+    "message": "Programming Language"
+  },
+  "labelProvider": {
+    "message": "LLM Provider"
+  },
+  "labelModel": {
+    "message": "LLM Model"
+  },
+  "labelApiKey": {
+    "message": "API Key"
+  },
+  "placeholderApiKey": {
+    "message": "Enter your API key"
+  },
+  "sectionAiOutputs": {
+    "message": "AI Output's"
+  },
+  "tcOutputTitle": {
+    "message": "Test Case Output"
+  },
+  "tcOutputDesc": {
+    "message": "Choose between manual tests or feature files"
+  },
+  "optionManualTest": {
+    "message": "✍️ Manual Test"
+  },
+  "optionFeatureFile": {
+    "message": "🧩 Feature File"
+  },
+  "optionPom": {
+    "message": "Page Object Model"
+  },
+  "optionTestScript": {
+    "message": "Test Script"
+  },
+  "multiPageTitle": {
+    "message": "Enable Multi-Page Selection"
+  },
+  "multiPageDesc": {
+    "message": "Capture elements across multiple pages"
+  },
+  "sanitizeTitle": {
+    "message": "Sanitize PII"
+  },
+  "sanitizeDesc": {
+    "message": "Auto-mask sensitive data (e.g. emails, passwords)"
+  },
+  "btnSaveSettings": {
+    "message": "Save Settings"
+  },
+  "errorSelectElement": {
+    "message": "Please select at least one element to generate a test case."
+  },
+  "errorNoInternet": {
+    "message": "No Internet Connection. Please check your network settings."
+  },
+  "errorApiKeyMandatory": {
+    "message": "API Key is mandatory. Please provide a valid API Key in Settings."
+  },
+  "piiWarningConfirm": {
+    "message": "PII has not been checked, which means we have a high possibility of sending sensitive info to AI.\n\nDo you want to continue?"
+  },
+  "progressStepBuilding": {
+    "message": "Generating test cases..."
+  },
+  "progressStepAutomation": {
+    "message": "Generating automation scripts..."
+  },
+  "errorApiTitle": {
+    "message": "API Error"
+  },
+  "alertCannotInspect": {
+    "message": "Cannot use the inspector on Chrome internal pages or extension pages."
+  },
+  "alertFailedStart": {
+    "message": "Failed to start inspector. Please refresh the web page and try again."
+  },
+  "alertConfirmReset": {
+    "message": "Are you sure you want to reset? This will clear all selected elements, context, and generated output."
+  },
+  "textSaved": {
+    "message": "Settings Saved!"
+  }
+}

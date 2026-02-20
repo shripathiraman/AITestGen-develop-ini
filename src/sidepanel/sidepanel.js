@@ -6,6 +6,17 @@ import { CodeGenerator } from './codegenerate.js';
 document.addEventListener('DOMContentLoaded', async () => {
   Logger.log("[Sidepanel] DOM fully loaded and parsed.");
 
+  // Apply i18n translations
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = chrome.i18n.getMessage(key) || el.textContent;
+  });
+
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.setAttribute('placeholder', chrome.i18n.getMessage(key) || el.getAttribute('placeholder'));
+  });
+
   const generatorTabBtn = document.getElementById('generator-tab');
   const settingsTabBtn = document.getElementById('settings-tab');
   const inspectBtn = document.getElementById('inspect-btn');
@@ -76,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Add the new URL check here
       if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
         Logger.log('Cannot use inspector on this page');
-        alert('Cannot use the inspector on Chrome internal pages or extension pages.'); // Alert message
+        alert(chrome.i18n.getMessage("alertCannotInspect") || 'Cannot use the inspector on Chrome internal pages or extension pages.');
         return; // Stop execution
       }
 
@@ -123,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           } catch (retryError) {
             Logger.error("[Sidepanel] Failed to inject/retry:", retryError);
-            alert('Failed to start inspector. Please refresh the web page and try again.');
+            alert(chrome.i18n.getMessage("alertFailedStart") || 'Failed to start inspector. Please refresh the web page and try again.');
           }
         } else {
           alert('Failed to start inspector: ' + error.message);
@@ -140,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Reset button
   resetBtn.addEventListener('click', () => {
-    const confirmReset = confirm("Are you sure you want to reset? This will clear all selected elements, context, and generated output.");
+    const confirmReset = confirm(chrome.i18n.getMessage("alertConfirmReset") || "Are you sure you want to reset? This will clear all selected elements, context, and generated output.");
     if (confirmReset) {
       Logger.log("[Sidepanel] Reset confirmed by user.");
       stopInspection();
