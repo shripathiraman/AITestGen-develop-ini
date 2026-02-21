@@ -67,7 +67,7 @@ KEY ENTRY POINTS:
 - manifest.json → Extension configuration
 - src/sidepanel/sidepanel.html → Main UI
 - src/background/background.js → Service worker
-- src/content_scripts/content.js → DOM inspector
+- src/content_scripts/content.js → DOM inspector and advanced semantic locator extractor
 - src/scripts/prompts.js → Prompt orchestrator
 - src/sidepanel/codegenerate.js → Test generation logic & stats tracking
 - src/scripts/log.js → Centralized logging utility

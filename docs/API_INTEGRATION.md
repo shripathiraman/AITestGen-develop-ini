@@ -120,6 +120,7 @@ The extension loads dropdown options dynamically from `src/data/dropdown-data.js
 
 ## Implementation Details
 
+- **Locators:** Note that the `prompt` payload sent to the LLMs includes structured, pre-computed locators that resolve to reliable strategies (Shadow DOM capabilities, fallback chains, resilience scoring, etc.) explicitly evaluated locally in `content.js`. This allows relying directly on the provided data within prompts to drastically reduce LLM hallucination.
 - **Logger:** Use the global `Logger` utility for debugging.
 - **Error Handling:** Ensure `sendMessage` throws meaningful errors. The `CodeGenerator` class will catch these and display them to the user using the dedicated `showApiError` modal.
 - **Usage Stats:** Always return a `usage` object with `input_tokens` and `output_tokens` from `sendMessage`. This powers the token usage & latency stats display in the UI.

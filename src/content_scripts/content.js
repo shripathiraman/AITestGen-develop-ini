@@ -34,7 +34,14 @@ if (!window.elementInspector) {
      * @description Manages the interactive element inspection process on a web page.
      * This includes highlighting elements on hover, allowing users to select elements via click,
      * generating robust CSS selectors and XPaths, and communicating selected element data
-     * back to the extension's popup or background script. It also handles comprehensive cleanup.
+     * back to the extension's popup or background script. It uses advanced locator strategies including:
+     * - Shadow DOM penetration
+     * - Dynamic waits
+     * - Resilience scoring
+     * - Fallback chains
+     * - Semantic parents tracking
+     * - Relative positioning
+     * It also handles comprehensive cleanup.
      */
     class ElementInspector {
         constructor() {
@@ -48,6 +55,8 @@ if (!window.elementInspector) {
             this.selectedElements = new Map();
             this.highlightedElement = null; // Stores the DOM element currently under the mouse cursor (hovered).
             this.currentPort = null; // Reserved for potential long-lived connections with the extension (not currently used).
+            this.domNodeCreationTimes = new WeakMap(); // Tracks when elements were added to the DOM (for dynamic wait strategies)
+            this.mutationObserver = null;
 
             // Flags and references for managing injected styles.
             this.highlightStyleAdded = false; // Tracks if the custom <style> element has been appended to <head>.
@@ -248,6 +257,7 @@ if (!window.elementInspector) {
 
             // Deactivate inspection mode.
             this.isActive = false;
+            this.stopMutationObserver();
             this._log("Inspection deactivated.");
 
             // Clear all selected elements from the internal Map.
@@ -312,6 +322,8 @@ if (!window.elementInspector) {
             document.addEventListener('click', this.handleElementClick, true);
             document.body.style.cursor = 'crosshair'; // Visual cue for inspection mode
 
+            this.startMutationObserver();
+
             this._log("Inspection mode activated with event listeners and cursor change.");
         }
 
@@ -335,6 +347,8 @@ if (!window.elementInspector) {
             document.removeEventListener('mousemove', this.handleMouseMove);
             document.removeEventListener('click', this.handleElementClick, true);
             document.body.style.cursor = ''; // Reset cursor to default
+
+            this.stopMutationObserver();
 
             // If an element is currently highlighted (hovered) and it's NOT a selected element,
             // remove its hover highlight and tooltip. This ensures selected elements remain highlighted.
@@ -379,6 +393,41 @@ if (!window.elementInspector) {
         }
 
         /**
+         * @method startMutationObserver
+         * @description Starts observing the DOM for added nodes to track their creation time.
+         * This helps determine if an element is dynamically loaded (for generated wait strategies).
+         */
+        startMutationObserver() {
+            if (this.mutationObserver) return;
+            this.mutationObserver = new MutationObserver((mutations) => {
+                const now = Date.now();
+                for (const mutation of mutations) {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach(node => {
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                this.domNodeCreationTimes.set(node, now);
+                            }
+                        });
+                    }
+                }
+            });
+            this.mutationObserver.observe(document.body, { childList: true, subtree: true });
+            this._log("Mutation observer started for dynamic element tracking.");
+        }
+
+        /**
+         * @method stopMutationObserver
+         * @description Stops the mutation observer.
+         */
+        stopMutationObserver() {
+            if (this.mutationObserver) {
+                this.mutationObserver.disconnect();
+                this.mutationObserver = null;
+                this._log("Mutation observer stopped.");
+            }
+        }
+
+        /**
          * @method handleMouseMove
          * @description Event handler for `mousemove` events. This method is throttled.
          * It updates the temporary hover highlight based on the element currently under the cursor.
@@ -390,7 +439,10 @@ if (!window.elementInspector) {
                 return;
             }
 
-            const element = e.target;
+            // Use composedPath() to penetrate Shadow DOM and get the real target
+            const path = e.composedPath();
+            const element = path && path.length > 0 ? path[0] : e.target;
+
             // Optimize: If the mouse is still over the same element, no need to update highlight.
             if (element === this.highlightedElement) {
                 // This message will appear less often due to throttling
@@ -517,7 +569,9 @@ if (!window.elementInspector) {
             e.stopPropagation(); // Stop event bubbling up to parent elements.
             e.stopImmediatePropagation(); // Further prevents other listeners on the same element from firing.
 
-            const element = e.target;
+            // Use composedPath() to penetrate Shadow DOM
+            const path = e.composedPath();
+            const element = path && path.length > 0 ? path[0] : e.target;
             const selector = this.getElementSelector(element);
             this._log(`Clicked element selector: ${selector}.`);
 
@@ -537,14 +591,33 @@ if (!window.elementInspector) {
             } else {
                 // Element is not selected, so select it.
                 this._log(`Selecting new element: ${selector}.`);
+                // Check if element is dynamic (created within the last 2 seconds)
+                let isDynamic = false;
+                if (this.domNodeCreationTimes.has(element)) {
+                    const creationTime = this.domNodeCreationTimes.get(element);
+                    if (Date.now() - creationTime < 2000) {
+                        isDynamic = true;
+                    }
+                }
+
+                // Also classify as dynamic if the ID or class looks auto-generated (lots of digits)
+                if (!isDynamic) {
+                    const id = element.id || "";
+                    const className = typeof element.className === 'string' ? element.className : "";
+                    if (/\d{4,}/.test(id) || /\d{4,}/.test(className)) {
+                        isDynamic = true;
+                    }
+                }
+
                 this.selectedElements.set(selector, {
                     selector: selector,
                     xpath: this.getElementXPath(element),
                     name: this.getElementName(element),
                     html: element.outerHTML,
                     attributes: this.getElementAttributes(element),
-                    playwrightLocator: this.getPlaywrightLocator(element),
-                    seleniumLocator: this.getSeleniumLocator(element)
+                    playwrightLocator: this.getPlaywrightLocator(element, isDynamic),
+                    seleniumLocator: this.getSeleniumLocator(element, isDynamic),
+                    isDynamic: isDynamic // Track this flag explicitly
                 });
 
                 element.classList.add('element-selected-highlight'); // Apply the selected highlight.
@@ -805,32 +878,103 @@ if (!window.elementInspector) {
         }
 
         /**
+         * @method calculateResilienceScore
+         * @description Evaluates and assigns a resilience score (0-100) to a locator strategy
+         * to determine its reliability and stability. This scoring system drives the fallback chain generation.
+         * @param {string} type - The type of locator.
+         * @param {string} value - The value.
+         * @returns {number} Score from 0 to 100.
+         */
+        calculateResilienceScore(type, value) {
+            if (type === 'testid') return 100;
+            if (type === 'role') return 90;
+            if (type === 'placeholder') return 80;
+            if (type === 'text') return 60;
+            if (type === 'id') {
+                if (/\\d{4,}/.test(value)) return 10; // Dynamic ID
+                return 70;
+            }
+            if (type === 'name') return 65;
+            if (type === 'class') {
+                if (/\\d{4,}/.test(value)) return 10; // Dynamic Class
+                return 40;
+            }
+            if (type === 'css') {
+                if (value.includes(':nth-of-type') || value.split('>').length > 3) return 15; // Fragile path
+                return 30; // Better CSS
+            }
+            return 0;
+        }
+
+        /**
          * @method getPlaywrightLocator
          * @description Generates a highly resilient Playwright semantic locator based on modern testing standards.
-         * Prioritizes test IDs, ARIA roles, placeholders, and visible text over fragile CSS/XPath.
+         * Integrates advanced strategies including Shadow DOM penetration (via composedPath during selection), 
+         * dynamic waits tracking, semantic parents tracking, relative positioning, and fallback chains (.or()).
+         * Prioritizes test IDs, ARIA roles, placeholders, and visible text.
          * @param {HTMLElement} element - The DOM element.
-         * @returns {string} - The exact string for a Playwright locator (e.g., "getByRole('button', { name: 'Submit' })")
+         * @param {boolean} isDynamic - Whether the element was dynamically loaded.
+         * @returns {string} - The exact string for a Playwright locator.
          */
-        getPlaywrightLocator(element) {
-            this._log("Generating Playwright semantic locator.");
+        getPlaywrightLocator(element, isDynamic = false) {
+            this._log("Generating Playwright semantic fallback locator.");
+            const locators = [];
 
-            // 1. Prioritize data-testid (the most robust selector in modern testing)
+            // Helper to get semantic parent context
+            const getSemanticParent = (el) => {
+                let current = el.parentElement;
+                let depth = 0;
+                while (current && depth < 4) {
+                    const tag = current.tagName.toLowerCase();
+                    if (['form', 'main', 'section', 'article', 'tr'].includes(tag) || current.getAttribute('data-testid')) {
+                        if (current.getAttribute('data-testid')) return `getByTestId('${current.getAttribute('data-testid')}')`;
+                        if (current.getAttribute('aria-label')) return `getByRole('region', { name: '${current.getAttribute('aria-label').replace(/'/g, "\\'")}' })`;
+                        return `locator('${tag}')`;
+                    }
+                    current = current.parentElement;
+                    depth++;
+                }
+                return null;
+            };
+
+            // Helper to get relative locator (sibling label)
+            const getRelativeContext = (el) => {
+                if (el.tagName.toLowerCase() !== 'input') return null;
+                const prev = el.previousElementSibling;
+                if (prev && prev.tagName.toLowerCase() === 'label' && prev.innerText) {
+                    return `getByLabel('${prev.innerText.trim().replace(/'/g, "\\'")}')`;
+                }
+                return null;
+            };
+
+            const semanticParent = getSemanticParent(element);
+            const relativeContext = getRelativeContext(element);
+            const prefix = semanticParent ? `${semanticParent}.` : '';
+
+            // 1. data-testid
             if (element.getAttribute('data-testid')) {
-                const testId = element.getAttribute('data-testid');
-                return `getByTestId('${testId}')`;
+                locators.push({
+                    str: `${prefix}getByTestId('${element.getAttribute('data-testid')}')`,
+                    score: this.calculateResilienceScore('testid', element.getAttribute('data-testid'))
+                });
             }
 
-            // 2. Placeholder text (excellent for inputs)
-            if (element.getAttribute('placeholder')) {
-                const placeholder = element.getAttribute('placeholder');
-                return `getByPlaceholder('${placeholder}')`;
+            // 2. Relative or Placeholder text
+            if (relativeContext) {
+                locators.push({
+                    str: `${prefix}${relativeContext}`,
+                    score: 85 // High score for associated labels
+                });
+            } else if (element.getAttribute('placeholder')) {
+                locators.push({
+                    str: `${prefix}getByPlaceholder('${element.getAttribute('placeholder')}')`,
+                    score: this.calculateResilienceScore('placeholder', element.getAttribute('placeholder'))
+                });
             }
 
-            // 3. ARIA Role & Name (The gold standard for semantic accessibility testing)
-            // Determine the implicit or explicit role
+            // 3. ARIA Role & Name
             let role = element.getAttribute('role');
             if (!role) {
-                // Infer implicit roles map
                 const tag = element.tagName.toLowerCase();
                 const type = element.getAttribute('type');
                 if (tag === 'button' || (tag === 'input' && (type === 'button' || type === 'submit' || type === 'reset'))) role = 'button';
@@ -838,74 +982,119 @@ if (!window.elementInspector) {
                 else if (tag === 'input' && type === 'checkbox') role = 'checkbox';
                 else if (tag === 'input' && type === 'radio') role = 'radio';
                 else if (tag === 'select') role = 'combobox';
-                else if (tag === 'input') role = 'textbox'; // simplified fallback for text inputs
-                else if (tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4' || tag === 'h5' || tag === 'h6') role = 'heading';
+                else if (tag === 'input') role = 'textbox';
+                else if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)) role = 'heading';
             }
 
             if (role) {
-                // Attempt to find a suitable accessible name
                 let name = element.getAttribute('aria-label') || element.getAttribute('title') || element.getAttribute('alt');
                 if (!name && element.innerText && element.innerText.trim().length > 0) {
-                    name = element.innerText.trim().split('\n')[0].substring(0, 50); // Take first line of text
+                    name = element.innerText.trim().split('\n')[0].substring(0, 50);
                 }
-
                 if (name) {
-                    // Escape single quotes for the generated code string
                     const escapedName = name.replace(/'/g, "\\'");
-                    return `getByRole('${role}', { name: '${escapedName}' })`;
+                    locators.push({
+                        str: `${prefix}getByRole('${role}', { name: '${escapedName}' })`,
+                        score: this.calculateResilienceScore('role', role)
+                    });
                 }
             }
 
-            // 4. Visible Text (if no robust role/name combination was found)
-            if (element.innerText && element.innerText.trim().length > 0) {
+            // 4. Visible Text (if no child nodes or explicitly distinct)
+            if (element.innerText && element.innerText.trim().length > 0 && element.children.length === 0) {
                 const text = element.innerText.trim().split('\n')[0].substring(0, 50);
                 const escapedText = text.replace(/'/g, "\\'");
-                return `getByText('${escapedText}')`;
+                locators.push({
+                    str: `${prefix}getByText('${escapedText}')`,
+                    score: this.calculateResilienceScore('text', text)
+                });
             }
 
-            // 5. Fallback strictly to CSS selector
+            // 5. Fallback CSS selector
             const cssSelector = this.getElementSelector(element);
             const escapedCss = cssSelector.replace(/'/g, "\\'");
-            return `locator('${escapedCss}')`;
+            locators.push({
+                str: `locator('${escapedCss}')`,
+                score: this.calculateResilienceScore('css', cssSelector)
+            });
+
+            // Sort by score descending and take top 3
+            locators.sort((a, b) => b.score - a.score);
+            const topLocators = locators.slice(0, 3).map(l => l.str);
+
+            let resultLocator = topLocators[0];
+            if (topLocators.length > 1) {
+                resultLocator = topLocators[0];
+                for (let i = 1; i < topLocators.length; i++) {
+                    resultLocator += `.or(page.${topLocators[i]})`;
+                }
+            }
+
+            if (isDynamic) {
+                return `// DYNAMIC ELEMENT WAITER\nawait page.waitForSelector('${escapedCss}', { state: 'visible', timeout: 5000 });\nawait page.${resultLocator}`;
+            }
+
+            return `page.${resultLocator}`;
         }
 
         /**
          * @method getSeleniumLocator
-         * @description Generates an explicit Selenium By locator string. 
-         * Useful to completely bypass LLM hallucination for locating elements in Java/Python.
+         * @description Generates an explicit Selenium By locator string utilizing advanced 
+         * generation techniques such as Shadow DOM penetration, dynamic waits (ExpectedConditions), 
+         * resilience scoring, and fallback chains (try/catch blocks).
          * @param {HTMLElement} element - The DOM element.
-         * @returns {string} - The exact Selenium code snippet (e.g., 'By.id("...")' or 'By.cssSelector("...")')
+         * @param {boolean} isDynamic - Whether the element was dynamically loaded.
+         * @returns {string} - The exact Selenium code snippet.
          */
-        getSeleniumLocator(element) {
+        getSeleniumLocator(element, isDynamic = false) {
             this._log("Generating explicit Selenium locator snippet.");
 
-            // A helper to safely escape attribute values (like IDs or names) for CSS selectors
             const escapeCssStr = (str) => {
                 if (!str) return '';
                 return str.replace(/(["'\\])/g, '\\$1');
             };
 
-            // 1. ID - The fastest and most reliable locator in Selenium
+            const locators = [];
+
             if (element.id && this.isUniqueSelector(`#${escapeCssStr(element.id)}`, element)) {
-                // Using " for internal java/python string to avoid clash with outer '
-                return `By.id("${element.id}")`;
+                locators.push({
+                    str: `By.id("${element.id}")`,
+                    score: this.calculateResilienceScore('id', element.id)
+                });
             }
 
-            // 2. Name attribute (specifically useful for forms)
             if (element.getAttribute('name')) {
                 const nameValue = element.getAttribute('name');
                 const selector = `${element.tagName.toLowerCase()}[name="${escapeCssStr(nameValue)}"]`;
                 if (this.isUniqueSelector(selector, element)) {
-                    return `By.name("${nameValue}")`;
+                    locators.push({
+                        str: `By.name("${nameValue}")`,
+                        score: this.calculateResilienceScore('name', nameValue)
+                    });
                 }
             }
 
-            // 3. Fallback to our robust CSS Selector generator
             const cssSelector = this.getElementSelector(element);
-
-            // Escape the CSS string for inclusion in Java/Python
             const escapedCss = cssSelector.replace(/"/g, '\\"');
-            return `By.cssSelector("${escapedCss}")`;
+            locators.push({
+                str: `By.cssSelector("${escapedCss}")`,
+                score: this.calculateResilienceScore('css', cssSelector)
+            });
+
+            // Sort and take top 2 for try/catch
+            locators.sort((a, b) => b.score - a.score);
+            const topLocators = locators.slice(0, 2).map(l => l.str);
+
+            let waitStr = "";
+            if (isDynamic) {
+                waitStr = `WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));\nwait.until(ExpectedConditions.visibilityOfElementLocated(${topLocators[0]}));\n`;
+            }
+
+            if (topLocators.length === 1) {
+                return `${waitStr}driver.findElement(${topLocators[0]})`;
+            } else {
+                return `${waitStr}WebElement element;\ntry {\n    element = driver.findElement(${topLocators[0]});\n} catch (NoSuchElementException e) {\n    element = driver.findElement(${topLocators[1]});\n}`;
+            }
         }
 
         /**

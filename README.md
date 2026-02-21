@@ -7,7 +7,7 @@ The **AI Test Case Generator** is a powerful Chrome Extension designed to stream
 ## ✨ Key Features
 
 *   **🔍 Interactive Element Inspection**: Point and click to select elements directly on any webpage.
-*   **🎯 Native Semantic Locators**: Automatically generates highly resilient, custom locators (e.g., `getByRole`, `getByTestId` for Playwright, CSS/XPath for Selenium) during inspection to prevent LLM hallucination.
+*   **🎯 Native Semantic Locators**: Automatically generates highly resilient, custom locators (e.g., `getByRole`, `getByTestId` for Playwright, CSS/XPath for Selenium) during inspection to prevent LLM hallucination. It uses advanced strategies including Shadow DOM penetration, dynamic waits, resilience scoring, fallback chains, semantic parents tracking, and relative positioning.
 *   **🤖 Multi-LLM Support**: Choose your preferred AI provider:
     *   **Groq**: Fast and efficient.
     *   **OpenAI (GPT)**: Industry-leading reasoning.
