@@ -65,7 +65,7 @@ E - EXAMPLE (Output):
 | 3. Enter "682001" in PIN Code field | Pincode field shows "682001" |
 | 4. Click Submit button | Form submits successfully with confirmation |
 
-[RULE] Ensure distinct vertical spacing (blank line) between EACH table. Use \`| :--- | :--- |\` for alignment.
+[RULE] Ensure distinct vertical spacing (blank line) and a horizontal rule \`---\` between EACH test case. Use \`| :--- | :--- |\` for alignment on EVERY standalone table block.
 
 T - TONE:
 Clear, structured, executable manual test cases for QA testers.

@@ -15,6 +15,8 @@ Create a new file in `src/scripts/api/` (e.g., `my-new-provider.js`). The class 
 **Template:**
 
 ```javascript
+import { fetchWithRetry } from './api-utils.js';
+
 export default class MyNewProviderAPI {
   constructor(apiKey) {
     this.apiKey = apiKey;
@@ -23,43 +25,53 @@ export default class MyNewProviderAPI {
 
   /**
    * Sends a prompt to the LLM and returns the response.
-   * @param {string} prompt - The prompt text.
-   * @param {string} modelName - The specific model to use.
-   * @returns {Promise<{content: string, usage: {input_tokens: number, output_tokens: number}}>}
+   * Wrapped in fetchWithRetry for exponential backoff on 429 timeouts.
    */
   async sendMessage(prompt, modelName) {
-    try {
-      Logger.log('[MyProvider] Sending message...');
-      
-      const response = await fetch(this.baseUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.apiKey}`
-        },
-        body: JSON.stringify({
-            model: modelName,
-            messages: [{ role: 'user', content: prompt }]
-        })
-      });
+    return fetchWithRetry(async (signal) => {
+      try {
+        Logger.log('[MyProvider] Sending message...');
+        
+        const response = await fetch(this.baseUrl, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.apiKey}`
+          },
+          body: JSON.stringify({
+              model: modelName,
+              messages: [{ role: 'user', content: prompt }]
+          }),
+          signal // 👈 pass abort signal for timeout
+        });
 
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return {
-        content: data.choices[0].message.content, // Adjust based on API structure
-        usage: {
-          input_tokens: data.usage?.prompt_tokens || 0,
-          output_tokens: data.usage?.completion_tokens || 0
+        if (!response.ok) {
+          throw new Error(`API Error: ${response.statusText}`);
         }
-      };
-      
-    } catch (error) {
-      Logger.error('[MyProvider] Error:', error);
-      throw error;
-    }
+
+        const data = await response.json();
+        return {
+          content: data.choices[0].message.content, // Adjust based on API structure
+          usage: {
+            input_tokens: data.usage?.prompt_tokens || 0,
+            output_tokens: data.usage?.completion_tokens || 0
+          }
+        };
+        
+      } catch (error) {
+        Logger.error('[MyProvider] Error:', error);
+        throw error;
+      }
+    });
+  }
+
+  /**
+   * Optional: Implements token-by-token streaming if the provider supports Server-Sent Events (SSE).
+   */
+  async sendMessageStream(prompt, modelName, onChunk) {
+     return fetchWithRetry(async (signal) => {
+         // ... implement stream fetch similar to groq-api.js or openai-api.js
+     });
   }
 }
 ```

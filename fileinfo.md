@@ -1,5 +1,5 @@
 Project File Usage Analysis
-Date: 2026-02-15
+Date: 2026-02-21
 Extension: AI Test Case Generator v1.1.0
 
 # ACTIVE / IN-USE FILES
@@ -30,8 +30,9 @@ These files are referenced in manifest.json or imported by active scripts.
    - src/scripts/prompts/manual.js (Manual test case prompts)
 
 4. API Integrations
-   - src/scripts/api/groq-api.js (Groq API client, returns usage stats)
-   - src/scripts/api/openai-api.js (OpenAI API client, returns usage stats)
+   - src/scripts/api/api-utils.js (Shared Utility for exponential backoff retries and timeouts)
+   - src/scripts/api/groq-api.js (Groq API client, returns usage stats, streams)
+   - src/scripts/api/openai-api.js (OpenAI API client, returns usage stats, streams)
    - src/scripts/api/testleaf-api.js (Testleaf API client, returns usage stats)
 
 5. External Libraries

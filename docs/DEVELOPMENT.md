@@ -41,7 +41,8 @@ root/
 
 ### Side Panel (`src/sidepanel/`)
 -   **Entry Point:** `sidepanel.html`
--   **Logic:** `sidepanel.js` (UI interaction) and `codegenerate.js` (AI orchestration).
+-   **Logic:** `sidepanel.js` (UI interaction) and `codegenerate.js` (AI orchestrator driving parallel API stream extraction and validation).
+-   **API:** All API calls in `src/scripts/api/` are wrapped in an exponential backoff `fetchWithRetry` (`api-utils.js`) utility to gracefully recover from 429 and 500 network/API errors.
 -   **Settings:** `settings.js` manages user preferences stored in `chrome.storage.local`.
 
 ### Content Scripts (`src/content_scripts/`)

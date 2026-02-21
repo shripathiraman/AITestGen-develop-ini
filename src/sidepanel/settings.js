@@ -149,7 +149,7 @@ class SettingsManager {
     this.log(`Populating LLM models for provider: ${selectedProvider}`);
     const models = this.dropdownData.llmModels?.[selectedProvider] || [];
     // Default to 'deepseek' if no selectedValue is provided
-    this.populateDropdown(this.elements['llm-model'], models, selectedValue || 'deepseek');
+    this.populateDropdown(this.elements['llm-model'], models, selectedValue || 'llama-3.3-70b-versatile');
   }
 
   handleDualToggle(clickedOption) {
@@ -165,7 +165,7 @@ class SettingsManager {
       language: 'typescript',
       automationTool: 'playwright',
       llmProvider: 'groq',
-      llmModel: 'deepseek',
+      llmModel: 'llama-3.3-70b-versatile',
       apiKey: '',
       outputFormat: 'manual',
       multiPage: true,

@@ -234,6 +234,11 @@ export class CodeGenerator {
       return;
     }
 
+    if (settings.testPage === true && settings.testScript === false) {
+      alert(chrome.i18n.getMessage("errorPomRequiresScript") || "Generating only a Page Object Model is not supported. Please select Test Script as well.");
+      return;
+    }
+
     // Store current states
     const btnStates = {
       inspect: this.elements['inspect-btn'].disabled,
@@ -371,6 +376,9 @@ export class CodeGenerator {
       else if (settings.llmProvider === 'openai') api = new OpenAIAPI(apiKey);
       else api = new TestleafAPI(apiKey);
 
+      const tasks = [];
+      const startTime = Date.now();
+
       // --- Call 1: Manual / Gherkin ---
       if (requirements.manual || requirements.feature) {
         currentStep++;
@@ -379,21 +387,38 @@ export class CodeGenerator {
         const manualPrompt = getManualGherkinPrompt(promptPayload);
         this.log(`Sending Manual/Gherkin request to ${settings.llmProvider}...`);
 
-        try {
-          const startTime = Date.now();
-          const response = await api.sendMessage(manualPrompt, settings.llmModel);
-          const latency = Date.now() - startTime;
+        const manualTask = (async () => {
+          try {
+            if (this.elements['output-section']) this.elements['output-section'].style.display = 'block';
+            let content = '';
+            let usage = null;
 
-          const content = response.content || response;
-          const usage = response.usage || null;
-          Logger.log('[STATS] Manual call done. Usage:', usage, 'Latency:', latency);
-          this.accumulateStats(usage, latency);
-          this.parseAndDisplay(content, requirements, settings, 'test-case');
-        } catch (e) {
-          Logger.error("Manual/Gherkin Generation Failed:", e);
-          const errorMsg = e.message || "Unknown error occurred";
-          this.showApiError(`Manual/Gherkin Generation Failed:\n${errorMsg}`);
-        }
+            if (api.sendMessageStream) {
+              const response = await api.sendMessageStream(manualPrompt, settings.llmModel, (token) => {
+                content += token;
+                this.parseAndDisplay(content, requirements, settings, 'test-case', true);
+                if (!document.querySelector('.output-tab.active') && this.elements['tab-test-case'].style.display !== 'none') {
+                  this.activateOutputTabs();
+                }
+              });
+              content = response.content;
+              usage = response.usage;
+              this.parseAndDisplay(content, requirements, settings, 'test-case', false);
+            } else {
+              const response = await api.sendMessage(manualPrompt, settings.llmModel);
+              content = response.content || response;
+              usage = response.usage || null;
+              this.parseAndDisplay(content, requirements, settings, 'test-case', false);
+            }
+            return { type: 'Manual/Gherkin', usage };
+          } catch (e) {
+            Logger.error("Manual/Gherkin Generation Failed:", e);
+            const errorMsg = e.message || "Unknown error occurred";
+            this.showApiError(`Manual/Gherkin Generation Failed:\n${errorMsg}`);
+            return null;
+          }
+        })();
+        tasks.push(manualTask);
       }
 
       // --- Call 2: Automation (POM / Script) ---
@@ -404,20 +429,55 @@ export class CodeGenerator {
         const automationPrompt = getAutomationPrompt(promptPayload);
         this.log(`Sending Automation request to ${settings.llmProvider}...`);
 
-        try {
-          const startTime = Date.now();
-          const response = await api.sendMessage(automationPrompt, settings.llmModel);
-          const latency = Date.now() - startTime;
+        const autoTask = (async () => {
+          try {
+            if (this.elements['output-section']) this.elements['output-section'].style.display = 'block';
+            let content = '';
+            let usage = null;
 
-          const content = response.content || response;
-          const usage = response.usage || null;
-          Logger.log('[STATS] Automation call done. Usage:', usage, 'Latency:', latency);
-          this.accumulateStats(usage, latency);
-          this.parseAndDisplay(content, requirements, settings, 'script');
-        } catch (e) {
-          Logger.error("Automation Generation Failed:", e);
-          const errorMsg = e.message || "Unknown error occurred";
-          this.showApiError(`Automation Generation Failed:\n${errorMsg}`);
+            if (api.sendMessageStream) {
+              const response = await api.sendMessageStream(automationPrompt, settings.llmModel, (token) => {
+                content += token;
+                this.parseAndDisplay(content, requirements, settings, 'script', true);
+                if (!document.querySelector('.output-tab.active')) {
+                  this.activateOutputTabs();
+                }
+              });
+              content = response.content;
+              usage = response.usage;
+              this.parseAndDisplay(content, requirements, settings, 'script', false);
+            } else {
+              const response = await api.sendMessage(automationPrompt, settings.llmModel);
+              content = response.content || response;
+              usage = response.usage || null;
+              this.parseAndDisplay(content, requirements, settings, 'script', false);
+            }
+            return { type: 'Automation', usage };
+          } catch (e) {
+            Logger.error("Automation Generation Failed:", e);
+            const errorMsg = e.message || "Unknown error occurred";
+            this.showApiError(`Automation Generation Failed:\n${errorMsg}`);
+            return null;
+          }
+        })();
+        tasks.push(autoTask);
+      }
+
+      // Execute all API requests in parallel
+      const results = await Promise.all(tasks);
+      const latency = Date.now() - startTime;
+
+      for (const res of results) {
+        if (!res) continue;
+
+        if (res.usage) {
+          this.accumulateStats(res.usage, (latency / results.length)); // share latency to avoid double counting
+          Logger.log(`[STATS] ${res.type} call done. Usage:`, res.usage, 'Latency:', latency);
+        }
+
+        if (res.content && !this.isLikelyValidOutput(res.content, requirements)) {
+          Logger.warn(`[CodeGen] Suspicious output for ${res.type} — may be incomplete. Showing anyway with warning.`);
+          this.showApiError(`The AI returned an unexpected response format for ${res.type}. Output may be incomplete — try regenerating.`);
         }
       }
 
@@ -459,6 +519,16 @@ export class CodeGenerator {
     }
   }
 
+  isLikelyValidOutput(content, requirements) {
+    if (!content || content.length < 50) return false;
+
+    if (requirements.manual && !content.includes('Test Case')) return false;
+    if (requirements.feature && !content.includes('Feature:') && !content.includes('Scenario')) return false;
+    if ((requirements.pom || requirements.script) && !content.includes('[[START_')) return false;
+
+    return true;
+  }
+
   /**
    * Renders the accumulated stats into the DOM.
    * Uses direct document.getElementById to avoid any caching issues.
@@ -489,18 +559,20 @@ export class CodeGenerator {
     Logger.log('[STATS] innerHTML set. Element display:', el.style.display, 'offsetHeight:', el.offsetHeight);
   }
 
-  parseAndDisplay(content, requirements, settings, fallbackTarget = 'test-case') {
-    this.log("Parsing combined response...");
-    this.log("Full response length:", content.length);
+  parseAndDisplay(content, requirements, settings, fallbackTarget = 'test-case', isStreaming = false) {
+    const log = (...args) => { if (!isStreaming) this.log(...args); };
+
+    log("Parsing combined response...");
+    log("Full response length:", content.length);
 
     // Log what tags we're looking for
-    this.log("Requirements:", requirements);
+    log("Requirements:", requirements);
 
     // DEBUG: Show first 500 chars of raw response
     // Use this.log to ensure it respects debug mode, or direct Logger if preferred
-    this.log("=== RAW LLM RESPONSE (first 500 chars) ===");
-    this.log(content.substring(0, 500));
-    this.log("=== END RAW RESPONSE PREVIEW ===");
+    log("=== RAW LLM RESPONSE (first 500 chars) ===");
+    log(content.substring(0, 500));
+    log("=== END RAW RESPONSE PREVIEW ===");
 
     // Robust string-based extraction helper
     const extractContent = (tagBase) => {
@@ -510,36 +582,36 @@ export class CodeGenerator {
       for (let i = 0; i < startTags.length; i++) {
         const startIdx = content.indexOf(startTags[i]);
         if (startIdx !== -1) {
-          this.log(`Found ${tagBase} start tag: ${startTags[i]} at position ${startIdx}`);
+          log(`Found ${tagBase} start tag: ${startTags[i]} at position ${startIdx}`);
           const contentStart = startIdx + startTags[i].length;
           const endIdx = content.indexOf(endTags[i], contentStart);
           if (endIdx !== -1) {
-            this.log(`Found ${tagBase} end tag at position ${endIdx}`);
+            log(`Found ${tagBase} end tag at position ${endIdx}`);
             const extracted = content.substring(contentStart, endIdx).trim();
-            this.log(`Extracted ${tagBase} content (${extracted.length} chars)`);
+            log(`Extracted ${tagBase} content (${extracted.length} chars)`);
             return extracted;
           }
           // If no end tag found but start tag exists, take until next START tag or end
           const nextStartIdx = content.indexOf('[[START_', contentStart);
           if (nextStartIdx !== -1) {
-            this.log(`No end tag for ${tagBase}, taking until next START tag at ${nextStartIdx}`);
+            log(`No end tag for ${tagBase}, taking until next START tag at ${nextStartIdx}`);
             return content.substring(contentStart, nextStartIdx).trim();
           }
-          this.log(`No end tag for ${tagBase}, taking everything remaining`);
+          log(`No end tag for ${tagBase}, taking everything remaining`);
           return content.substring(contentStart).trim();
         }
       }
-      this.log(`No tags found for ${tagBase}`);
+      log(`No tags found for ${tagBase}`);
       return null;
     };
 
     const langHint = settings.language ? settings.language.toLowerCase() : '';
 
     // 1. Test Case
-    this.log("=== Extracting Test Case ===");
+    log("=== Extracting Test Case ===");
     let tcContent = extractContent("MANUAL_TEST") || extractContent("FEATURE_FILE");
     if (tcContent) {
-      this.log("Found Test Case content, first 100 chars:", tcContent.substring(0, 100));
+      log("Found Test Case content, first 100 chars:", tcContent.substring(0, 100));
       this.elements['tab-test-case'].style.display = 'flex';
       this.elements['area-test-case'].value = tcContent;
       // If it's a feature file and doesn't have backticks, wrap it
@@ -550,10 +622,10 @@ export class CodeGenerator {
     }
 
     // 2. Page Object Model
-    this.log("=== Extracting POM ===");
+    log("=== Extracting POM ===");
     const pomContent = extractContent("POM");
     if (pomContent) {
-      this.log("Found POM content, first 100 chars:", pomContent.substring(0, 100));
+      log("Found POM content, first 100 chars:", pomContent.substring(0, 100));
       this.elements['tab-pom'].style.display = 'flex';
       this.elements['area-pom'].value = pomContent;
       let displayContent = pomContent;
@@ -564,10 +636,10 @@ export class CodeGenerator {
     }
 
     // 3. Test Script
-    this.log("=== Extracting Test Script ===");
+    log("=== Extracting Test Script ===");
     const scriptContent = extractContent("TEST_SCRIPT");
     if (scriptContent) {
-      this.log("Found Test Script content, first 100 chars:", scriptContent.substring(0, 100));
+      log("Found Test Script content, first 100 chars:", scriptContent.substring(0, 100));
       this.elements['tab-script'].style.display = 'flex';
       this.elements['area-script'].value = scriptContent;
       let displayContent = scriptContent;
@@ -579,30 +651,35 @@ export class CodeGenerator {
 
     // Fallback: If absolutely NOTHING was extracted, dump the raw response to specified target
     if (!tcContent && !pomContent && !scriptContent) {
-      this.log(`Parser failed to find any tags. Performing fallback dump to ${fallbackTarget}.`);
+      const looksLikeTag = isStreaming && (content.includes('[[') || content.includes('[START_'));
+      if (!looksLikeTag) {
+        log(`Parser failed to find any tags. Performing fallback dump to ${fallbackTarget}.`);
 
-      if (fallbackTarget === 'script') {
-        this.elements['tab-script'].style.display = 'flex';
-        this.elements['area-script'].value = content;
-        this.elements['preview-script'].innerHTML = this.renderMarkdown(content);
-      } else {
-        // Default to test case tab
-        this.elements['tab-test-case'].style.display = 'flex';
-        this.elements['area-test-case'].value = content;
-        this.elements['preview-test-case'].innerHTML = this.renderMarkdown(content);
+        if (fallbackTarget === 'script') {
+          this.elements['tab-script'].style.display = 'flex';
+          this.elements['area-script'].value = content;
+          this.elements['preview-script'].innerHTML = this.renderMarkdown(content);
+        } else {
+          // Default to test case tab
+          this.elements['tab-test-case'].style.display = 'flex';
+          this.elements['area-test-case'].value = content;
+          this.elements['preview-test-case'].innerHTML = this.renderMarkdown(content);
+        }
       }
     }
 
     // NOTE: activateOutputTabs is called from handleGenerateClick, not here
 
     // Ensure syntax highlighting is applied to all new code blocks
-    setTimeout(() => {
-      if (window.Prism) {
-        document.querySelectorAll('.markdown-body pre code').forEach(block => {
-          window.Prism.highlightElement(block);
-        });
-      }
-    }, 100);
+    if (!isStreaming) {
+      setTimeout(() => {
+        if (window.Prism) {
+          document.querySelectorAll('.markdown-body pre code').forEach(block => {
+            window.Prism.highlightElement(block);
+          });
+        }
+      }, 100);
+    }
   }
 
   renderMarkdown(text) {
