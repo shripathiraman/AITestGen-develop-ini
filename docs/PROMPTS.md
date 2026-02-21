@@ -6,7 +6,7 @@ This extension uses a structured approach to prompt engineering called **ICE-TOP
 
 Every prompt is constructed using these six components:
 
-1.  **I - Instruction:** clear, direct command of what the AI should do.
+1.  **I - Instruction:** clear, direct command of what the AI should do. (e.g. Strict directives forcing the AI to strictly use only our pre-computed `playwrightLocator`/`seleniumLocator` fields).
 2.  **C - Context:** Relevant background information (DOM structure, Page URL, User Intent).
 3.  **E - Example:** One-shot or few-shot examples of the input and expected output.
 4.  **T - Tone:** The desired style of the response (e.g., "Professional", "Strict").

@@ -275,7 +275,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         name: request.name,
         xpath: request.xpath,
         html: request.html,
-        attributes: request.attributes || {}
+        attributes: request.attributes || {},
+        playwrightLocator: request.playwrightLocator,
+        seleniumLocator: request.seleniumLocator
       });
       chrome.storage.local.set({ selectedElements: currentElements });
       renderElements();
@@ -288,7 +290,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         name: element.name,
         xpath: element.xpath,
         html: element.html,
-        attributes: element.attributes || {}
+        attributes: element.attributes || {},
+        playwrightLocator: element.playwrightLocator,
+        seleniumLocator: element.seleniumLocator
       }));
       chrome.storage.local.set({ selectedElements: currentElements }, () => {
         try {

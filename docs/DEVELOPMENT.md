@@ -45,7 +45,7 @@ root/
 -   **Settings:** `settings.js` manages user preferences stored in `chrome.storage.local`.
 
 ### Content Scripts (`src/content_scripts/`)
--   `content.js`: Handles element highlighting, inspection, and capturing DOM data.
+-   `content.js`: Handles element highlighting, inspection, capturing DOM data, and computing resilient `playwrightLocator`/`seleniumLocator` strings.
 -   Communicates with the Side Panel via `chrome.runtime.sendMessage`.
 
 ### Background Script (`src/background/`)

@@ -325,6 +325,23 @@ export class CodeGenerator {
         this.log("Sanitizing PII from selected elements...");
         elementsToProcess = this.sanitizeDOM(elementsToProcess);
       }
+
+      // --- Filter Locators by Automation Tool ---
+      // We only want to send the locator that matches the chosen tool to the LLM
+      const selectedTool = (settings.automationTool || '').toLowerCase();
+      elementsToProcess = elementsToProcess.map(el => {
+        const filteredEl = { ...el };
+
+        // Remove locators that do NOT match the selected tool
+        if (selectedTool !== 'playwright') {
+          delete filteredEl.playwrightLocator;
+        }
+        if (selectedTool !== 'selenium') {
+          delete filteredEl.seleniumLocator;
+        }
+
+        return filteredEl;
+      });
       // -----------------------------
 
       // 3. Requirements
@@ -659,7 +676,9 @@ export class CodeGenerator {
       return {
         ...el,
         html: sanitizedHtml,
-        attributes: this.sanitizeAttributes(el.attributes)
+        attributes: this.sanitizeAttributes(el.attributes),
+        playwrightLocator: el.playwrightLocator,
+        seleniumLocator: el.seleniumLocator
       };
     });
   }

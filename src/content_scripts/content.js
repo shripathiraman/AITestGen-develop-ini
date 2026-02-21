@@ -58,6 +58,9 @@ if (!window.elementInspector) {
             this.handleMouseMove = throttle(this.handleMouseMove.bind(this), 50); // Throttle to max 20 calls/sec
             this.handleElementClick = this.handleElementClick.bind(this);
             this.handleRuntimeMessage = this.handleRuntimeMessage.bind(this);
+            // Bind newly added methods
+            this.getPlaywrightLocator = this.getPlaywrightLocator.bind(this);
+            this.getSeleniumLocator = this.getSeleniumLocator.bind(this);
             // Binding for the `beforeunload` event, crucial for cleanup when the page is closed/navigated away.
             this.boundHandleUnload = this.handlePageUnload.bind(this);
 
@@ -539,7 +542,9 @@ if (!window.elementInspector) {
                     xpath: this.getElementXPath(element),
                     name: this.getElementName(element),
                     html: element.outerHTML,
-                    attributes: this.getElementAttributes(element)
+                    attributes: this.getElementAttributes(element),
+                    playwrightLocator: this.getPlaywrightLocator(element),
+                    seleniumLocator: this.getSeleniumLocator(element)
                 });
 
                 element.classList.add('element-selected-highlight'); // Apply the selected highlight.
@@ -800,9 +805,113 @@ if (!window.elementInspector) {
         }
 
         /**
+         * @method getPlaywrightLocator
+         * @description Generates a highly resilient Playwright semantic locator based on modern testing standards.
+         * Prioritizes test IDs, ARIA roles, placeholders, and visible text over fragile CSS/XPath.
+         * @param {HTMLElement} element - The DOM element.
+         * @returns {string} - The exact string for a Playwright locator (e.g., "getByRole('button', { name: 'Submit' })")
+         */
+        getPlaywrightLocator(element) {
+            this._log("Generating Playwright semantic locator.");
+
+            // 1. Prioritize data-testid (the most robust selector in modern testing)
+            if (element.getAttribute('data-testid')) {
+                const testId = element.getAttribute('data-testid');
+                return `getByTestId('${testId}')`;
+            }
+
+            // 2. Placeholder text (excellent for inputs)
+            if (element.getAttribute('placeholder')) {
+                const placeholder = element.getAttribute('placeholder');
+                return `getByPlaceholder('${placeholder}')`;
+            }
+
+            // 3. ARIA Role & Name (The gold standard for semantic accessibility testing)
+            // Determine the implicit or explicit role
+            let role = element.getAttribute('role');
+            if (!role) {
+                // Infer implicit roles map
+                const tag = element.tagName.toLowerCase();
+                const type = element.getAttribute('type');
+                if (tag === 'button' || (tag === 'input' && (type === 'button' || type === 'submit' || type === 'reset'))) role = 'button';
+                else if (tag === 'a' && element.hasAttribute('href')) role = 'link';
+                else if (tag === 'input' && type === 'checkbox') role = 'checkbox';
+                else if (tag === 'input' && type === 'radio') role = 'radio';
+                else if (tag === 'select') role = 'combobox';
+                else if (tag === 'input') role = 'textbox'; // simplified fallback for text inputs
+                else if (tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4' || tag === 'h5' || tag === 'h6') role = 'heading';
+            }
+
+            if (role) {
+                // Attempt to find a suitable accessible name
+                let name = element.getAttribute('aria-label') || element.getAttribute('title') || element.getAttribute('alt');
+                if (!name && element.innerText && element.innerText.trim().length > 0) {
+                    name = element.innerText.trim().split('\n')[0].substring(0, 50); // Take first line of text
+                }
+
+                if (name) {
+                    // Escape single quotes for the generated code string
+                    const escapedName = name.replace(/'/g, "\\'");
+                    return `getByRole('${role}', { name: '${escapedName}' })`;
+                }
+            }
+
+            // 4. Visible Text (if no robust role/name combination was found)
+            if (element.innerText && element.innerText.trim().length > 0) {
+                const text = element.innerText.trim().split('\n')[0].substring(0, 50);
+                const escapedText = text.replace(/'/g, "\\'");
+                return `getByText('${escapedText}')`;
+            }
+
+            // 5. Fallback strictly to CSS selector
+            const cssSelector = this.getElementSelector(element);
+            const escapedCss = cssSelector.replace(/'/g, "\\'");
+            return `locator('${escapedCss}')`;
+        }
+
+        /**
+         * @method getSeleniumLocator
+         * @description Generates an explicit Selenium By locator string. 
+         * Useful to completely bypass LLM hallucination for locating elements in Java/Python.
+         * @param {HTMLElement} element - The DOM element.
+         * @returns {string} - The exact Selenium code snippet (e.g., 'By.id("...")' or 'By.cssSelector("...")')
+         */
+        getSeleniumLocator(element) {
+            this._log("Generating explicit Selenium locator snippet.");
+
+            // A helper to safely escape attribute values (like IDs or names) for CSS selectors
+            const escapeCssStr = (str) => {
+                if (!str) return '';
+                return str.replace(/(["'\\])/g, '\\$1');
+            };
+
+            // 1. ID - The fastest and most reliable locator in Selenium
+            if (element.id && this.isUniqueSelector(`#${escapeCssStr(element.id)}`, element)) {
+                // Using " for internal java/python string to avoid clash with outer '
+                return `By.id("${element.id}")`;
+            }
+
+            // 2. Name attribute (specifically useful for forms)
+            if (element.getAttribute('name')) {
+                const nameValue = element.getAttribute('name');
+                const selector = `${element.tagName.toLowerCase()}[name="${escapeCssStr(nameValue)}"]`;
+                if (this.isUniqueSelector(selector, element)) {
+                    return `By.name("${nameValue}")`;
+                }
+            }
+
+            // 3. Fallback to our robust CSS Selector generator
+            const cssSelector = this.getElementSelector(element);
+
+            // Escape the CSS string for inclusion in Java/Python
+            const escapedCss = cssSelector.replace(/"/g, '\\"');
+            return `By.cssSelector("${escapedCss}")`;
+        }
+
+        /**
          * @method getElementName
          * @description Attempts to derive a human-readable name or label for an element.
-         * It checks various attributes (`name`, `aria-label`, `data-testid`, `title`)
+         * It checks various attributes (`name`, `aria - label`, `data - testid`, `title`)
          * and falls back to truncated `innerText` or the element's tag name.
          * @param {HTMLElement} element - The DOM element.
          * @returns {string} - A descriptive name for the element.
@@ -831,7 +940,7 @@ if (!window.elementInspector) {
             if (element.innerText && element.innerText.trim().length > 0) {
                 const text = element.innerText.trim();
                 const name = text.substring(0, 50) + (text.length > 50 ? '...' : '');
-                this._log(`Using innerText (truncated to 50 chars): ${name}.`);
+                this._log(`Using innerText(truncated to 50 chars): ${name}.`);
                 return name;
             }
 

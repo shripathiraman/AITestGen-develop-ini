@@ -11,7 +11,7 @@ These files are referenced in manifest.json or imported by active scripts.
    - _locales/en/messages.json (English localization dictionary)
    - _locales/fr/messages.json (French localization dictionary)
    - src/background/background.js (Service worker)
-   - src/content_scripts/content.js (DOM inspection & element selection)
+   - src/content_scripts/content.js (DOM inspection, element selection, & semantic locator extraction)
    - src/content_scripts/inspect.css (Inspector UI styling)
    - src/scripts/log.js (Centralized logging utility)
 

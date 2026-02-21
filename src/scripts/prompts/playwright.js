@@ -4,7 +4,7 @@
  */
 
 const STRICT_RULES = `
-- Use modern Playwright locators (getByRole, getByLabel, getByPlaceholder, getByTestId)
+- [CRITICAL]: Use the pre-calculated \`playwrightLocator\` field (modern locators like getByRole/getByLabel/getByTestId) for EVERY element interaction. Do NOT invent locators
 - Include proper async/await patterns throughout
 - Use France realistic dataset: names (Marie Martin, Lucas Bernard), addresses (24 Rue de l’Exposition, Paris), mobile (+33-6-12-34-56-78), pin codes (75007 (Paris), 75001 (Paris), 69002 (Lyon), 06300 (Nice))
 - Use dropdown values ONLY from provided DOM options
