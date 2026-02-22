@@ -168,5 +168,14 @@
   },
   "textSaved": {
     "message": "Settings Saved!"
+  },
+  "errorPomRequiresScript": {
+    "message": "Generating only a Page Object Model is not supported. Please select Test Script as well."
+  },
+  "btnContinue": {
+    "message": "Continue"
+  },
+  "btnCancel": {
+    "message": "Cancel"
   }
 }

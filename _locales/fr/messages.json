@@ -166,5 +166,14 @@
     },
     "textSaved": {
         "message": "Sauvegardé !"
+    },
+    "errorPomRequiresScript": {
+        "message": "Générer uniquement un Page Object Model n'est pas pris en charge. Veuillez également sélectionner Script de Test."
+    },
+    "btnContinue": {
+        "message": "Continuer"
+    },
+    "btnCancel": {
+        "message": "Annuler"
     }
 }

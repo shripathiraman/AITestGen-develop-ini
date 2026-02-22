@@ -61,8 +61,10 @@ export class CodeGenerator {
 
     // API Error Modal
     this.elements['api-error-modal'] = document.getElementById('api-error-modal');
+    this.elements['api-error-modal-title'] = document.getElementById('api-error-modal-title');
     this.elements['api-error-modal-message'] = document.getElementById('api-error-modal-message');
     this.elements['api-error-modal-ok-btn'] = document.getElementById('api-error-modal-ok-btn');
+    this.elements['api-error-modal-cancel-btn'] = document.getElementById('api-error-modal-cancel-btn');
   }
 
   async initialize() {
@@ -99,6 +101,21 @@ export class CodeGenerator {
         if (this.elements['api-error-modal-message']) {
           this.elements['api-error-modal-message'].textContent = '';
         }
+        // Resolve any pending confirm promise (treated as "OK / Continue")
+        if (this._modalResolve) { this._modalResolve(true); this._modalResolve = null; }
+      });
+    }
+
+    if (this.elements['api-error-modal-cancel-btn']) {
+      this.elements['api-error-modal-cancel-btn'].addEventListener('click', () => {
+        if (this.elements['api-error-modal']) {
+          this.elements['api-error-modal'].style.display = 'none';
+        }
+        if (this.elements['api-error-modal-message']) {
+          this.elements['api-error-modal-message'].textContent = '';
+        }
+        // Resolve as cancelled
+        if (this._modalResolve) { this._modalResolve(false); this._modalResolve = null; }
       });
     }
   }
@@ -107,10 +124,36 @@ export class CodeGenerator {
     if (this.elements['api-error-modal'] && this.elements['api-error-modal-message']) {
       const currentMsg = this.elements['api-error-modal-message'].textContent;
       this.elements['api-error-modal-message'].textContent = currentMsg ? currentMsg + '\n\n' + message : message;
+      if (this.elements['api-error-modal-title']) this.elements['api-error-modal-title'].textContent = 'API Error';
+      if (this.elements['api-error-modal-cancel-btn']) this.elements['api-error-modal-cancel-btn'].style.display = 'none';
+      if (this.elements['api-error-modal-ok-btn']) this.elements['api-error-modal-ok-btn'].textContent = 'OK';
       this.elements['api-error-modal'].style.display = 'flex';
     } else {
       alert(message);
     }
+  }
+
+  /**
+   * Shows the modal as a two-button confirm dialog.
+   * Returns a Promise<boolean> — true if user clicked Continue, false if Cancel.
+   */
+  showConfirmModal(title, message, okLabel = 'Continue', cancelLabel = 'Cancel') {
+    return new Promise((resolve) => {
+      if (!this.elements['api-error-modal']) {
+        // Fallback to native confirm if modal is unavailable
+        resolve(confirm(message));
+        return;
+      }
+      this._modalResolve = resolve;
+      if (this.elements['api-error-modal-title']) this.elements['api-error-modal-title'].textContent = title;
+      if (this.elements['api-error-modal-message']) this.elements['api-error-modal-message'].textContent = message;
+      if (this.elements['api-error-modal-ok-btn']) this.elements['api-error-modal-ok-btn'].textContent = okLabel;
+      if (this.elements['api-error-modal-cancel-btn']) {
+        this.elements['api-error-modal-cancel-btn'].textContent = cancelLabel;
+        this.elements['api-error-modal-cancel-btn'].style.display = 'inline-block';
+      }
+      this.elements['api-error-modal'].style.display = 'flex';
+    });
   }
 
   /**
@@ -213,7 +256,6 @@ export class CodeGenerator {
       'apiKey',
       'outputFormat',
       'testPage',
-      'testPage',
       'testScript',
       'sanitizePii'
     ]);
@@ -314,7 +356,13 @@ export class CodeGenerator {
 
       if (settings.sanitizePii === false) {
         // PII is NOT sanitized -> Warn User
-        const userConfirmed = confirm(chrome.i18n.getMessage("piiWarningConfirm") || "PII has not been checked, which means we have a high possibility of sending sensitive info to AI.\n\nDo you want to continue?");
+        const piiWarningMsg = chrome.i18n.getMessage("piiWarningConfirm") || "PII has not been checked, which means we have a high possibility of sending sensitive info to AI.\n\nDo you want to continue?";
+        const userConfirmed = await this.showConfirmModal(
+          '⚠️ Privacy Warning',
+          piiWarningMsg,
+          chrome.i18n.getMessage("btnContinue") || 'Continue',
+          chrome.i18n.getMessage("btnCancel") || 'Cancel'
+        );
 
         if (!userConfirmed) {
           this.log("Generation cancelled by user due to PII warning.");
@@ -377,7 +425,7 @@ export class CodeGenerator {
       else api = new TestleafAPI(apiKey);
 
       const tasks = [];
-      const startTime = Date.now();
+      const startTime = Date.now(); // kept for overall wall-clock display
 
       // --- Call 1: Manual / Gherkin ---
       if (requirements.manual || requirements.feature) {
@@ -392,6 +440,7 @@ export class CodeGenerator {
             if (this.elements['output-section']) this.elements['output-section'].style.display = 'block';
             let content = '';
             let usage = null;
+            const taskStart = performance.now();
 
             if (api.sendMessageStream) {
               const response = await api.sendMessageStream(manualPrompt, settings.llmModel, (token) => {
@@ -410,7 +459,8 @@ export class CodeGenerator {
               usage = response.usage || null;
               this.parseAndDisplay(content, requirements, settings, 'test-case', false);
             }
-            return { type: 'Manual/Gherkin', usage };
+            const taskLatency = Math.round(performance.now() - taskStart);
+            return { type: 'Manual/Gherkin', usage, content, latency: taskLatency };
           } catch (e) {
             Logger.error("Manual/Gherkin Generation Failed:", e);
             const errorMsg = e.message || "Unknown error occurred";
@@ -434,6 +484,7 @@ export class CodeGenerator {
             if (this.elements['output-section']) this.elements['output-section'].style.display = 'block';
             let content = '';
             let usage = null;
+            const taskStart = performance.now();
 
             if (api.sendMessageStream) {
               const response = await api.sendMessageStream(automationPrompt, settings.llmModel, (token) => {
@@ -452,7 +503,8 @@ export class CodeGenerator {
               usage = response.usage || null;
               this.parseAndDisplay(content, requirements, settings, 'script', false);
             }
-            return { type: 'Automation', usage };
+            const taskLatency = Math.round(performance.now() - taskStart);
+            return { type: 'Automation', usage, content, latency: taskLatency };
           } catch (e) {
             Logger.error("Automation Generation Failed:", e);
             const errorMsg = e.message || "Unknown error occurred";
@@ -471,13 +523,13 @@ export class CodeGenerator {
         if (!res) continue;
 
         if (res.usage) {
-          this.accumulateStats(res.usage, (latency / results.length)); // share latency to avoid double counting
-          Logger.log(`[STATS] ${res.type} call done. Usage:`, res.usage, 'Latency:', latency);
+          this.accumulateStats(res.usage, res.latency ?? 0);
+          Logger.log(`[STATS] ${res.type} call done. Usage:`, res.usage, 'Latency:', res.latency, 'ms');
         }
 
         if (res.content && !this.isLikelyValidOutput(res.content, requirements)) {
-          Logger.warn(`[CodeGen] Suspicious output for ${res.type} — may be incomplete. Showing anyway with warning.`);
-          this.showApiError(`The AI returned an unexpected response format for ${res.type}. Output may be incomplete — try regenerating.`);
+          // Content is shown via parseAndDisplay's fallback — only log, don't disrupt the user with a modal.
+          Logger.warn(`[CodeGen] Suspicious output for ${res.type} — delimiter tags missing. Output displayed via fallback.`);
         }
       }
 
@@ -574,6 +626,24 @@ export class CodeGenerator {
     log(content.substring(0, 500));
     log("=== END RAW RESPONSE PREVIEW ===");
 
+    // Helper: strip trailing [[...]] tag lines and stray wrapping code fences from extracted content
+    const cleanExtracted = (text) => {
+      if (!text) return text;
+      // Remove any [[...]] tag lines (malformed end tags like [[_POM]], [[END_SCRIPT]] etc.)
+      let cleaned = text.replace(/\[\[[\w/_]*\]\]\s*$/gm, '').trim();
+      // If the entire content is wrapped in a single outer code fence, unwrap it
+      // unless it contains multiple fences (in which case it's intentional formatting)
+      const fenceMatch = cleaned.match(/^```[\w]*\n([\s\S]*)\n```$/);
+      if (fenceMatch) {
+        const inner = fenceMatch[1];
+        // Only unwrap if the inner content has no further fences (avoid double-unwrapping)
+        if (!inner.includes('```')) {
+          cleaned = inner.trim();
+        }
+      }
+      return cleaned;
+    };
+
     // Robust string-based extraction helper
     const extractContent = (tagBase) => {
       const startTags = [`[[START_${tagBase}]]`, `[START_${tagBase}]`, `[[${tagBase}]]`];
@@ -584,21 +654,38 @@ export class CodeGenerator {
         if (startIdx !== -1) {
           log(`Found ${tagBase} start tag: ${startTags[i]} at position ${startIdx}`);
           const contentStart = startIdx + startTags[i].length;
-          const endIdx = content.indexOf(endTags[i], contentStart);
+
+          // 1. Try exact end tag
+          let endIdx = content.indexOf(endTags[i], contentStart);
+
+          // 2. Fuzzy fallback: any [[END_…]] or [[_…]] pattern (handles [[END_SCRIPT]], [[_POM]] etc.)
+          if (endIdx === -1) {
+            const patterns = ['[[END_', '[[_', '[END_'];
+            for (const pat of patterns) {
+              const idx = content.indexOf(pat, contentStart);
+              if (idx !== -1) {
+                log(`No exact end tag for ${tagBase}, using fuzzy end at position ${idx}`);
+                endIdx = idx;
+                break;
+              }
+            }
+          }
+
           if (endIdx !== -1) {
             log(`Found ${tagBase} end tag at position ${endIdx}`);
-            const extracted = content.substring(contentStart, endIdx).trim();
+            const extracted = cleanExtracted(content.substring(contentStart, endIdx).trim());
             log(`Extracted ${tagBase} content (${extracted.length} chars)`);
             return extracted;
           }
-          // If no end tag found but start tag exists, take until next START tag or end
+
+          // 3. No end tag at all — take until next [[START_ or end of string
           const nextStartIdx = content.indexOf('[[START_', contentStart);
           if (nextStartIdx !== -1) {
             log(`No end tag for ${tagBase}, taking until next START tag at ${nextStartIdx}`);
-            return content.substring(contentStart, nextStartIdx).trim();
+            return cleanExtracted(content.substring(contentStart, nextStartIdx).trim());
           }
           log(`No end tag for ${tagBase}, taking everything remaining`);
-          return content.substring(contentStart).trim();
+          return cleanExtracted(content.substring(contentStart).trim());
         }
       }
       log(`No tags found for ${tagBase}`);
@@ -614,11 +701,23 @@ export class CodeGenerator {
       log("Found Test Case content, first 100 chars:", tcContent.substring(0, 100));
       this.elements['tab-test-case'].style.display = 'flex';
       this.elements['area-test-case'].value = tcContent;
-      // If it's a feature file and doesn't have backticks, wrap it
-      if (requirements.feature && !tcContent.includes('```')) {
-        tcContent = `\`\`\`gherkin\n${tcContent}\n\`\`\``;
+
+      let renderContent = tcContent;
+
+      if (requirements.feature) {
+        // Gherkin: wrap in code fence if not already wrapped
+        if (!renderContent.includes('```')) {
+          renderContent = `\`\`\`gherkin\n${renderContent}\n\`\`\``;
+        }
+      } else {
+        // Manual test: strip ALL embedded code fences added by the LLM.
+        // LLMs sometimes wrap test data, steps, or entire test cases in backtick fences
+        // which marked.js renders as dark <pre> blocks. For manual tests there is no
+        // legitimate reason to have code blocks — replace every fence with its inner text.
+        renderContent = renderContent.replace(/```[\w]*\n?([\s\S]*?)```/g, (_, inner) => inner.trim());
       }
-      this.elements['preview-test-case'].innerHTML = this.renderMarkdown(tcContent);
+
+      this.elements['preview-test-case'].innerHTML = this.renderMarkdown(renderContent);
     }
 
     // 2. Page Object Model

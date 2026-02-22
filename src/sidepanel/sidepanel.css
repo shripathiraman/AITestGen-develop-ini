@@ -859,3 +859,22 @@ input:checked + .slider:before {
 #api-error-modal-ok-btn:hover {
   background-color: var(--color-primary-hover);
 }
+
+.error-modal-footer {
+  gap: 8px;
+}
+
+#api-error-modal-cancel-btn {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+#api-error-modal-cancel-btn:hover {
+  background-color: var(--color-surface-hover);
+}

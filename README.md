@@ -116,7 +116,7 @@ To help protect sensitive information, the extension includes **automatic PII re
 
 ### Local Storage
 
-*   **API Keys**: Stored locally in your browser (`chrome.storage.local`) and encrypted by Chrome.
+*   **API Keys**: Stored locally in your browser using `chrome.storage.local`. **Note:** Chrome does not encrypt this storage — data is saved as plain JSON in your browser profile directory. It is isolated to this extension and inaccessible to other extensions or web pages, but treat your API key like any other credential: do not share your browser profile.
 *   **Settings & Preferences**: Saved locally; never transmitted to third parties.
 
 ---

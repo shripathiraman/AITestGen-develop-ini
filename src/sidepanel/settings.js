@@ -279,7 +279,7 @@ class SettingsManager {
       llmProvider: this.elements['llm-provider'].value,
       llmModel: this.elements['llm-model'].value,
       apiKey: apiKey,
-      outputFormat: document.querySelector('.dual-option.active').dataset.value, // Still need to query as it's not cached in elements specifically
+      outputFormat: document.querySelector('.dual-option.active')?.dataset.value || 'manual',
       multiPage: this.elements['multi-page'].checked,
       testPage: this.elements['test-page'].checked,
       testScript: this.elements['test-script'].checked,

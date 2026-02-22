@@ -70,11 +70,15 @@ E - EXAMPLE (Output):
 T - TONE:
 Clear, structured, executable manual test cases for QA testers.
 
-O - OUTPUT FORMAT:
-ONLY markdown tables with valid test case format. No explanations, no additional text outside tables.
+O - OUTPUT FORMAT [CRITICAL — MUST FOLLOW EXACTLY FOR EVERY TEST CASE]:
+- ONLY markdown tables. No explanations, no code fences, no additional text outside tables.
+- Each test step MUST be on its own table row. NEVER use \`||\` to separate steps on a single line.
+- Bold text MUST use \`**text**\` with NO space after the opening \`**\`. Example: \`**Expected Result**\` ✅, \`** Result**\` ❌
+- EVERY table block MUST include the alignment row \`| :--- | :--- |\` immediately after the header row.
+- Separate each test case with a blank line and a horizontal rule \`---\`.
 
 P - PERSONA:
 QA testers who need ready-to-execute manual test cases for test execution.
-The feature file should be easily understandable by non-technical stakeholders as well.
+The test cases should be easily understandable by non-technical stakeholders as well.
 `
 };

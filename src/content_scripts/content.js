@@ -891,12 +891,12 @@ if (!window.elementInspector) {
             if (type === 'placeholder') return 80;
             if (type === 'text') return 60;
             if (type === 'id') {
-                if (/\\d{4,}/.test(value)) return 10; // Dynamic ID
+                if (/\d{4,}/.test(value)) return 10; // Dynamic ID
                 return 70;
             }
             if (type === 'name') return 65;
             if (type === 'class') {
-                if (/\\d{4,}/.test(value)) return 10; // Dynamic Class
+                if (/\d{4,}/.test(value)) return 10; // Dynamic Class
                 return 40;
             }
             if (type === 'css') {

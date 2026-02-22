@@ -261,6 +261,12 @@ export const getDesignatedPrompt = (language, { includePom } = {}) => {
     // I - INSTRUCTION
     let instruction = `
 I - INSTRUCTION:
+[CRITICAL OUTPUT RULE] Your response MUST use these exact delimiter tags — no exceptions:
+${includePom
+            ? '  - Wrap the Page Object Model in [[START_POM]] ... [[END_POM]]\n  - Wrap the Test Script in [[START_TEST_SCRIPT]] ... [[END_TEST_SCRIPT]]'
+            : '  - Wrap all output in [[START_TEST_SCRIPT]] ... [[END_TEST_SCRIPT]]'}
+Failure to include these tags will make your output unusable.
+
 Generate a complete Selenium ${langName} ${includePom ? 'Solution (Page Object Model + Test Script)' : 'test file'} for the provided DOM. Follow these rules strictly:
 ${STRICT_RULES}
 `;
@@ -288,15 +294,17 @@ ${STRICT_RULES}
 
     // O - OUTPUT
     let outputFormat = `
-O - OUTPUT FORMAT:
+O - OUTPUT FORMAT [CRITICAL — YOU MUST FOLLOW THIS EXACTLY]:
 `;
     if (includePom) {
-        outputFormat += `Provide TWO code blocks:
-1. The Page Object Model class in ${langName} wrapped in [[START_POM]] and [[END_POM]]
-2. The Test Script in ${langName} that imports and uses the Page Object wrapped in [[START_TEST_SCRIPT]] and [[END_TEST_SCRIPT]]
-No explanations.`;
+        outputFormat += `Provide EXACTLY TWO code blocks in this order:
+1. The Page Object Model class in ${langName} — MUST be wrapped in [[START_POM]] at the start and [[END_POM]] at the end
+2. The Test Script in ${langName} — MUST be wrapped in [[START_TEST_SCRIPT]] at the start and [[END_TEST_SCRIPT]] at the end
+Do NOT omit these tags. Do NOT add explanations outside the code blocks.`;
     } else {
-        outputFormat += `ONLY ${langName} code in a single ${language} code block wrapped in [[START_TEST_SCRIPT]] and [[END_TEST_SCRIPT]]. No explanations.`;
+        outputFormat += `Output ONLY the ${langName} code block.
+It MUST start with [[START_TEST_SCRIPT]] and end with [[END_TEST_SCRIPT]].
+Do NOT omit these tags. Do NOT add any explanations.`;
     }
 
     // P - PERSONA

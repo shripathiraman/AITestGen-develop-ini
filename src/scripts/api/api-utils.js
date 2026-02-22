@@ -23,11 +23,7 @@ export async function fetchWithRetry(fn, { maxRetries = 3, timeoutMs = 20000 } =
 
             if (attempt < maxRetries - 1 && isRetryable) {
                 const delay = Math.pow(2, attempt) * 600; // 600ms, 1.2s, 2.4s
-                if (window.Logger) {
-                    Logger.warn(`[API] Attempt ${attempt + 1} failed (${err.message}). Retrying in ${delay}ms...`);
-                } else {
-                    console.warn(`[API] Attempt ${attempt + 1} failed (${err.message}). Retrying in ${delay}ms...`);
-                }
+                Logger.warn(`[API] Attempt ${attempt + 1} failed (${err.message}). Retrying in ${delay}ms...`);
                 await new Promise(res => setTimeout(res, delay));
             } else {
                 // If it's the last attempt and it failed via timeout:
